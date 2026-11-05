@@ -57,7 +57,7 @@ def ingest_version(
         # embedded PDF metadata titles are often junk.
 
         _stage(session, version, doc, "chunking")
-        drafts = get_chunker(config).chunk(parsed.blocks)
+        drafts = get_chunker(config, embedder).chunk(parsed.blocks)
 
         _stage(session, version, doc, "embedding")
         children = [d for d in drafts if d.level == "child"]

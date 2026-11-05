@@ -1,29 +1,22 @@
 import uuid
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
-from app.api.deps import (
-    current_user_id,
-    db_session,
-    embedder_dep,
-    llm_dep,
-    session_opener_dep,
-    settings_dep,
-    store_factory_dep,
-    vector_store_dep,
+from app.api.deps import chat_deps, current_user_id
+from app.services.chat_service import (
+    ChatRequestError,
+    Deps,
+    persist_exchange,
+    prepare_turn,
+    stream_chat,
+    turn_meta,
+    validate_request,
 )
-from app.config import Settings
-from app.models import Conversation, Message
-from app.services.chat_service import SessionOpener, StoreFactory, stream_chat
-from app.services.embeddings import Embedder
-from app.services.generation.llm_client import LLMClient
 from app.services.generation.rag_chain import answer_question
-from app.services.vectorstore import Scope, VectorStore
 
 router = APIRouter(tags=["chat"])
 
@@ -32,6 +25,10 @@ class ChatIn(BaseModel):
     question: str
     conversation_id: uuid.UUID | None = None
     document_ids: list[uuid.UUID] | None = None
+    mode: Literal["qa", "compare"] = "qa"
+
+    def scope_ids(self) -> tuple[uuid.UUID, ...] | None:
+        return tuple(self.document_ids) if self.document_ids else None
 
 
 class CitationOut(BaseModel):
@@ -50,58 +47,39 @@ class ChatOut(BaseModel):
     message_id: uuid.UUID
     answer: str
     citations: list[CitationOut]
+    closest: list[dict[str, Any]] = []
+    meta: dict[str, Any] = {}
+
+
+def _validate(body: ChatIn) -> None:
+    try:
+        validate_request(body.question, body.mode, body.scope_ids())
+    except ChatRequestError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 @router.post("/chat")
 async def chat(
     body: ChatIn,
     user_id: uuid.UUID = Depends(current_user_id),
-    session: Session = Depends(db_session),
-    embedder: Embedder = Depends(embedder_dep),
-    store: VectorStore = Depends(vector_store_dep),
-    llm: LLMClient = Depends(llm_dep),
-    settings: Settings = Depends(settings_dep),
+    deps: Deps = Depends(chat_deps),
 ) -> ChatOut:
-    if not body.question.strip():
-        raise HTTPException(422, "question is empty")
-    config = settings.pipeline
-    scope = Scope(user_id, tuple(body.document_ids) if body.document_ids else None)
-
-    def retrieve() -> list:  # type: ignore[type-arg]
-        vector = embedder.embed_query(body.question)
-        return store.search(vector, config.top_k, scope)
-
-    hits = await run_in_threadpool(retrieve)
-    result = await answer_question(body.question, hits, llm, settings, config)
-
-    def persist() -> tuple[uuid.UUID, uuid.UUID]:
-        conv = session.get(Conversation, body.conversation_id) if body.conversation_id else None
-        if body.conversation_id and conv is None:
-            raise HTTPException(404, "conversation not found")
-        if conv is None:
-            conv = Conversation(user_id=user_id, title=body.question[:80])
-            session.add(conv)
-            session.flush()
-        session.add(Message(conversation_id=conv.id, user_id=user_id, role="user", content=body.question))
-        reply = Message(
-            conversation_id=conv.id,
-            user_id=user_id,
-            role="assistant",
-            content=result.answer,
-            citations=[c.to_json() for c in result.citations],
-            input_tokens=result.input_tokens,
-            output_tokens=result.output_tokens,
-        )
-        session.add(reply)
-        session.flush()
-        return conv.id, reply.id
-
-    conv_id, msg_id = await run_in_threadpool(persist)
+    _validate(body)
+    turn = await prepare_turn(
+        deps, user_id, body.conversation_id, body.question, body.scope_ids(), body.mode
+    )
+    result = await answer_question(turn, deps.llm, deps.settings, deps.settings.pipeline)
+    conv_id, msg_id = await run_in_threadpool(
+        persist_exchange, deps.open_session, user_id, body.conversation_id, body.question,
+        result.answer, result.citations, result.input_tokens, result.output_tokens, False,
+    )
     return ChatOut(
         conversation_id=conv_id,
         message_id=msg_id,
         answer=result.answer,
         citations=[CitationOut(**c.__dict__) for c in result.citations],
+        closest=result.closest,
+        meta=turn_meta(turn),
     )
 
 
@@ -109,24 +87,16 @@ async def chat(
 async def chat_stream(
     body: ChatIn,
     user_id: uuid.UUID = Depends(current_user_id),
-    open_session: SessionOpener = Depends(session_opener_dep),
-    make_store: StoreFactory = Depends(store_factory_dep),
-    embedder: Embedder = Depends(embedder_dep),
-    llm: LLMClient = Depends(llm_dep),
-    settings: Settings = Depends(settings_dep),
+    deps: Deps = Depends(chat_deps),
 ) -> StreamingResponse:
-    if not body.question.strip():
-        raise HTTPException(422, "question is empty")
+    _validate(body)
     events = stream_chat(
+        deps=deps,
         user_id=user_id,
         question=body.question,
         conversation_id=body.conversation_id,
-        document_ids=tuple(body.document_ids) if body.document_ids else None,
-        open_session=open_session,
-        make_store=make_store,
-        embedder=embedder,
-        llm=llm,
-        settings=settings,
+        document_ids=body.scope_ids(),
+        mode=body.mode,
     )
     return StreamingResponse(
         events,

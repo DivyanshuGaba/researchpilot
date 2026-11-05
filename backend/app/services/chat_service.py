@@ -1,36 +1,187 @@
-"""Streaming chat orchestration (architecture.md section 8).
+"""Chat orchestration shared by /chat and /chat/stream (architecture.md sections 5 and 8).
 
-Events: status, token, citation, done, error. A heartbeat comment is sent while idle so proxies
-keep the connection open. If the client disconnects, the partial answer is saved as incomplete.
+prepare_turn: memory -> rewrite -> retrieve -> rerank -> confidence gate.
+stream_chat:  SSE events status, token, citation, closest, done, error, plus a heartbeat.
+If the client disconnects, the partial answer is saved as incomplete.
 """
 
 import asyncio
 import json
 import logging
+import time
 import uuid
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import AbstractContextManager
+from dataclasses import dataclass
 from typing import Any
 
 from fastapi.concurrency import run_in_threadpool
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.models import Conversation, Message
+from app.models import Conversation, Document, Message
+from app.services import memory
 from app.services.embeddings import Embedder
 from app.services.generation.llm_client import LLMClient
-from app.services.generation.rag_chain import Citation, RagAnswer, stream_answer
-from app.services.vectorstore import Hit, Scope, VectorStore
+from app.services.generation.rag_chain import (
+    Citation,
+    RagAnswer,
+    closest_json,
+    stream_answer,
+)
+from app.services.retrieval.query_rewrite import rewrite_query
+from app.services.retrieval.reranker import Reranker
+from app.services.retrieval.service import Retrieval, finalize, gather_candidates
+from app.services.turn import Group, Turn
+from app.services.vectorstore import Scope, VectorStore
 
 log = logging.getLogger(__name__)
 
 HEARTBEAT_SECONDS = 15.0
 SessionOpener = Callable[[uuid.UUID], AbstractContextManager[Session]]
 StoreFactory = Callable[[Session], VectorStore]
+StatusFn = Callable[[str], Awaitable[None]]
+
+
+class ChatRequestError(ValueError):
+    """The request itself is invalid (maps to HTTP 422)."""
+
+
+@dataclass
+class Deps:
+    open_session: SessionOpener
+    make_store: StoreFactory
+    embedder: Embedder
+    reranker: Reranker | None
+    llm: LLMClient
+    settings: Settings
+
+
+def validate_request(question: str, mode: str, document_ids: tuple[uuid.UUID, ...] | None) -> None:
+    if not question.strip():
+        raise ChatRequestError("question is empty")
+    if mode == "compare" and (document_ids is None or len(set(document_ids)) < 2):
+        raise ChatRequestError("compare mode needs at least two selected documents")
 
 
 def sse(event: str, data: dict[str, Any]) -> str:
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
+
+
+async def _no_status(_stage: str) -> None:
+    return None
+
+
+def _ms(start: float) -> int:
+    return int((time.perf_counter() - start) * 1000)
+
+
+def _merge(into: dict[str, int], more: dict[str, int]) -> None:
+    for k, v in more.items():
+        into[k] = into.get(k, 0) + v
+
+
+async def prepare_turn(
+    deps: Deps,
+    user_id: uuid.UUID,
+    conversation_id: uuid.UUID | None,
+    question: str,
+    document_ids: tuple[uuid.UUID, ...] | None,
+    mode: str = "qa",
+    on_status: StatusFn = _no_status,
+) -> Turn:
+    cfg = deps.settings.pipeline
+    min_score = deps.settings.retrieval_min_score
+    turn = Turn(question=question, mode=mode)
+
+    def load() -> memory.HistoryState:
+        with deps.open_session(user_id) as s:
+            return memory.load_history(s, conversation_id, cfg)
+
+    t = time.perf_counter()
+    state = await run_in_threadpool(load)
+    summary = state.summary
+    if state.to_fold and state.conversation_id is not None:
+        conv_id, folded = state.conversation_id, state.summarized_count + len(state.to_fold)
+        new_summary = await memory.fold_summary(state, deps.llm, deps.settings)
+        if new_summary is None:
+            turn.degraded.append("summary")
+        else:
+            summary = new_summary
+
+            def save() -> None:
+                with deps.open_session(user_id) as s:
+                    memory.save_summary(s, conv_id, new_summary, folded)
+
+            await run_in_threadpool(save)
+    turn.timings_ms["memory"] = _ms(t)
+    turn.history_text = memory.history_text(summary, state.recent)
+
+    t = time.perf_counter()
+    if state.recent or summary:
+        await on_status("rewriting")
+    turn.standalone, used_llm = await rewrite_query(question, state, summary, deps.llm, deps.settings)
+    if used_llm or turn.standalone != question:
+        turn.timings_ms["rewrite"] = _ms(t)
+
+    await on_status("searching")
+    if mode == "compare":
+        assert document_ids is not None
+        await _retrieve_compare(deps, user_id, turn, tuple(dict.fromkeys(document_ids)), min_score)
+        return turn
+
+    scope = Scope(user_id, document_ids)
+
+    def gather():  # type: ignore[no-untyped-def]
+        with deps.open_session(user_id) as s:
+            return gather_candidates(deps.make_store(s), deps.embedder, turn.standalone, scope, cfg)
+
+    cands = await run_in_threadpool(gather)
+    if cfg.retrieval_mode == "hybrid_rerank":
+        await on_status("reranking")
+    result = await run_in_threadpool(
+        finalize, cands, turn.standalone, deps.reranker, cfg, min_score
+    )
+    turn.groups = [Group(None, result.hits)]
+    turn.gated, turn.closest, turn.top_score = result.gated, result.closest, result.top_score
+    _merge(turn.timings_ms, result.timings_ms)
+    turn.degraded.extend(result.degraded)
+    return turn
+
+
+async def _retrieve_compare(
+    deps: Deps, user_id: uuid.UUID, turn: Turn, doc_ids: tuple[uuid.UUID, ...], min_score: float
+) -> None:
+    """Retrieve per document so one paper cannot crowd out the other (architecture 5.7)."""
+    cfg = deps.settings.pipeline
+    per_doc_cfg = cfg.model_copy(update={"top_k": cfg.compare_per_doc})
+
+    def run() -> tuple[dict[uuid.UUID, str], list[tuple[uuid.UUID, Retrieval]]]:
+        with deps.open_session(user_id) as s:
+            store = deps.make_store(s)
+            titles = {
+                d.id: d.title for d in s.scalars(select(Document).where(Document.id.in_(doc_ids)))
+            }
+            out = []
+            for doc_id in doc_ids:
+                cands = gather_candidates(
+                    store, deps.embedder, turn.standalone, Scope(user_id, (doc_id,)), per_doc_cfg
+                )
+                out.append(
+                    (doc_id, finalize(cands, turn.standalone, deps.reranker, per_doc_cfg, min_score))
+                )
+            return titles, out
+
+    titles, results = await run_in_threadpool(run)
+    for doc_id, r in results:
+        turn.groups.append(Group(titles.get(doc_id, "Document"), r.hits))
+        turn.closest.extend(r.closest)
+        _merge(turn.timings_ms, r.timings_ms)
+        turn.degraded.extend(x for x in r.degraded if x not in turn.degraded)
+    scores = [r.top_score for _, r in results if r.top_score is not None]
+    turn.top_score = max(scores) if scores else None
+    turn.gated = not any(g.hits for g in turn.groups)
 
 
 def persist_exchange(
@@ -66,24 +217,28 @@ def persist_exchange(
         return conv.id, reply.id
 
 
+def turn_meta(turn: Turn) -> dict[str, Any]:
+    return {
+        "mode": turn.mode,
+        "standalone_query": turn.standalone,
+        "top_score": None if turn.top_score is None else round(turn.top_score, 3),
+        "timings_ms": turn.timings_ms,
+        "degraded": turn.degraded,
+    }
+
+
 async def stream_chat(
     *,
+    deps: Deps,
     user_id: uuid.UUID,
     question: str,
     conversation_id: uuid.UUID | None,
     document_ids: tuple[uuid.UUID, ...] | None,
-    open_session: SessionOpener,
-    make_store: StoreFactory,
-    embedder: Embedder,
-    llm: LLMClient,
-    settings: Settings,
+    mode: str = "qa",
 ) -> AsyncIterator[str]:
     queue: asyncio.Queue[str | None] = asyncio.Queue()
     task = asyncio.create_task(
-        _produce(
-            queue, user_id, question, conversation_id, document_ids,
-            open_session, make_store, embedder, llm, settings,
-        )
+        _produce(queue, deps, user_id, question, conversation_id, document_ids, mode)
     )
     try:
         while True:
@@ -102,32 +257,24 @@ async def stream_chat(
 
 async def _produce(
     queue: asyncio.Queue[str | None],
+    deps: Deps,
     user_id: uuid.UUID,
     question: str,
     conversation_id: uuid.UUID | None,
     document_ids: tuple[uuid.UUID, ...] | None,
-    open_session: SessionOpener,
-    make_store: StoreFactory,
-    embedder: Embedder,
-    llm: LLMClient,
-    settings: Settings,
+    mode: str,
 ) -> None:
-    config = settings.pipeline
+    config = deps.settings.pipeline
     partial: list[str] = []
     final: RagAnswer | None = None
-    started = asyncio.get_running_loop().time()
+    started = time.perf_counter()
+
+    async def status(stage: str) -> None:
+        await queue.put(sse("status", {"stage": stage}))
+
     try:
-        await queue.put(sse("status", {"stage": "searching"}))
-
-        def retrieve() -> list[Hit]:
-            vector = embedder.embed_query(question)
-            with open_session(user_id) as session:
-                return make_store(session).search(
-                    vector, config.top_k, Scope(user_id, document_ids)
-                )
-
-        hits = await run_in_threadpool(retrieve)
-        async for item in stream_answer(question, hits, llm, settings, config):
+        turn = await prepare_turn(deps, user_id, conversation_id, question, document_ids, mode, status)
+        async for item in stream_answer(turn, deps.llm, deps.settings, config):
             if isinstance(item, RagAnswer):
                 final = item
             else:
@@ -136,10 +283,9 @@ async def _produce(
                 await queue.put(sse(item.event, item.data))
         assert final is not None
         conv_id, msg_id = await run_in_threadpool(
-            persist_exchange, open_session, user_id, conversation_id, question,
+            persist_exchange, deps.open_session, user_id, conversation_id, question,
             final.answer, final.citations, final.input_tokens, final.output_tokens, False,
         )
-        latency_ms = int((asyncio.get_running_loop().time() - started) * 1000)
         await queue.put(
             sse(
                 "done",
@@ -149,16 +295,17 @@ async def _produce(
                     "answer": final.answer,  # authoritative: invalid citation markers removed
                     "input_tokens": final.input_tokens,
                     "output_tokens": final.output_tokens,
-                    "latency_ms": latency_ms,
+                    "latency_ms": _ms(started),
+                    "closest": final.closest,
+                    **turn_meta(turn),
                 },
             )
         )
     except asyncio.CancelledError:
-        text = "".join(partial)
         await asyncio.shield(
             run_in_threadpool(
-                persist_exchange, open_session, user_id, conversation_id, question,
-                text, [], 0, 0, True,
+                persist_exchange, deps.open_session, user_id, conversation_id, question,
+                "".join(partial), [], 0, 0, True,
             )
         )
         raise
@@ -167,3 +314,6 @@ async def _produce(
         await queue.put(sse("error", {"code": "internal", "message": "Something went wrong."}))
     finally:
         await queue.put(None)
+
+
+__all__ = ["Deps", "closest_json", "prepare_turn", "stream_chat", "validate_request"]

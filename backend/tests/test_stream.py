@@ -1,26 +1,18 @@
 import asyncio
 import json
 import uuid
-from contextlib import contextmanager
 
-import pytest
-
-from app.config import Settings
 from app.services import chat_service
 from app.services.chat_service import stream_chat
 from app.services.generation.llm_client import LLMEvent
-from app.services.vectorstore import Hit
 
-from .test_chat import CHUNK_ID, DOC_ID, FakeEmbedder, FakeSession, FakeStore
+from .fakes import FakeStore, make_deps, make_hit
 
 USER = uuid.uuid4()
 
 
-def _hit() -> Hit:
-    return Hit(
-        CHUNK_ID, DOC_ID, "Biology", 7, 7, 0.9, "Mitochondria produce ATP.",
-        "Mitochondria produce ATP.", bbox_list=[{"page": 7, "bbox": [1, 2, 3, 4]}],
-    )
+def _hit():
+    return make_hit()
 
 
 class StreamLLM:
@@ -38,17 +30,10 @@ class StreamLLM:
         yield LLMEvent("usage", input_tokens=11, output_tokens=5)
 
 
-def _run(llm, hits, session=None):
-    session = session or FakeSession()
-
-    @contextmanager
-    def opener(_uid):
-        yield session
-
+def _run(llm, hits, session=None, **kw):
+    deps, session = make_deps(FakeStore(hits), llm, session=session)
     gen = stream_chat(
-        user_id=USER, question="q", conversation_id=None, document_ids=None,
-        open_session=opener, make_store=lambda _s: FakeStore(hits), embedder=FakeEmbedder(),
-        llm=llm, settings=Settings(llm_model="m"),
+        deps=deps, user_id=USER, question="q", conversation_id=None, document_ids=None, **kw
     )
     return gen, session
 
@@ -82,7 +67,7 @@ async def test_stream_emits_ordered_events_and_persists():
 async def test_stream_refuses_without_hits():
     gen, _ = _run(StreamLLM([]), [])
     events = _parse([c async for c in gen])
-    assert [n for n, _ in events] == ["status", "token", "done"]
+    assert [n for n, _ in events] == ["status", "status", "token", "done"]
 
 
 async def test_disconnect_saves_partial_answer_as_incomplete():
@@ -120,8 +105,3 @@ async def test_heartbeat_comment_while_idle(monkeypatch):
             break
     await gen.aclose()
     assert any(c.startswith(": ping") for c in chunks)
-
-
-@pytest.fixture(autouse=True)
-def _quiet():
-    yield

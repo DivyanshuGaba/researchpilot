@@ -14,7 +14,7 @@ from app.api import deps
 from app.config import PipelineConfig, Settings
 from app.db import get_factory, tenant_session
 from app.main import app
-from app.models import Chunk, Document, DocumentVersion, User
+from app.models import Chunk, Conversation, Document, DocumentVersion, User
 from app.services.generation.llm_client import LLMRequest, LLMResponse
 from app.services.ingestion.pipeline import ingest_version
 from app.services.vectorstore import PgVectorStore, Scope
@@ -209,6 +209,7 @@ def test_upload_and_chat_end_to_end(tmp_path):
     app.dependency_overrides[deps.enqueue_dep] = lambda: enqueue
     app.dependency_overrides[deps.embedder_dep] = lambda: HashEmbedder()
     app.dependency_overrides[deps.llm_dep] = lambda: llm
+    app.dependency_overrides[deps.reranker_dep] = lambda: None
     try:
         client = TestClient(app)
         h = {"X-User-Id": str(user)}
@@ -247,5 +248,101 @@ def test_upload_and_chat_end_to_end(tmp_path):
 
         bad = client.post("/documents", headers=h, files={"file": ("x.exe", b"MZ\x90\x00")})
         assert bad.status_code == 415
+    finally:
+        app.dependency_overrides.clear()
+
+
+# --- Phase 3: keyword search, memory, compare -------------------------------------------------
+
+
+def test_keyword_search_finds_rare_terms_and_respects_tenancy(corpus):
+    user, _ = corpus
+    with tenant_session(user) as s:
+        store = PgVectorStore(s)
+        hits = store.keyword_search("What happens in the Krebs cycle?", 5, Scope(user))
+        assert hits and hits[0].page_start == 2 and "Krebs" in hits[0].child_text
+        assert store.keyword_search("???", 5, Scope(user)) == []
+        assert store.keyword_search("xylophone", 5, Scope(user)) == []
+    with tenant_session(_make_user()) as s:
+        assert PgVectorStore(s).keyword_search("Krebs cycle", 5, Scope(uuid.uuid4())) == []
+
+
+def _chat_client(tmp_path, llm):
+    from .fakes import FakeReranker
+
+    settings = Settings(upload_dir=str(tmp_path / "uploads"), llm_model="test")
+
+    def enqueue(version_id: str, user_id: str) -> None:
+        with tenant_session(uuid.UUID(user_id)) as s:
+            ingest_version(s, uuid.UUID(version_id), HashEmbedder(), settings.pipeline)
+
+    app.dependency_overrides[deps.settings_dep] = lambda: settings
+    app.dependency_overrides[deps.enqueue_dep] = lambda: enqueue
+    app.dependency_overrides[deps.embedder_dep] = lambda: HashEmbedder()
+    app.dependency_overrides[deps.llm_dep] = lambda: llm
+    app.dependency_overrides[deps.reranker_dep] = lambda: FakeReranker()
+    return TestClient(app)
+
+
+def test_multi_turn_rewrite_and_rolling_summary(tmp_path):
+    from .fakes import FakeLLM
+
+    user = _make_user()
+    pdf = tmp_path / "bio.pdf"
+    _make_pdf(pdf, PAGES)
+    llm = FakeLLM("Mitochondria make ATP [c_1].", rewrite="how do mitochondria produce ATP")
+    client = _chat_client(tmp_path, llm)
+    h = {"X-User-Id": str(user)}
+    try:
+        assert client.post("/documents", headers=h, files={"file": ("bio.pdf", pdf.read_bytes())}).status_code == 202
+
+        first = client.post("/chat", headers=h, json={"question": "How do mitochondria produce ATP?"}).json()
+        assert llm.rewrites == []  # first turn: nothing to resolve, no rewrite call
+        conv = first["conversation_id"]
+
+        second = client.post(
+            "/chat", headers=h, json={"question": "and where does it happen?", "conversation_id": conv}
+        ).json()
+        assert len(llm.rewrites) == 1
+        assert second["meta"]["standalone_query"] == "how do mitochondria produce ATP"
+        answer_req = llm.requests[-1]
+        assert "<conversation>" in answer_req.user and "How do mitochondria produce ATP?" in answer_req.user
+        assert "[c_1]" not in answer_req.user.split("<sources>")[0]  # history is stripped of markers
+
+        # keep chatting until the window overflows and older turns are folded into a summary
+        for i in range(6):
+            client.post("/chat", headers=h, json={"question": f"follow up {i} about ATP", "conversation_id": conv})
+        assert llm.summaries, "older messages should have been summarized"
+        with tenant_session(user) as s:
+            c = s.get(Conversation, uuid.UUID(conv))
+            assert c is not None and c.summary.startswith("SUMMARY") and c.summarized_count > 0
+        last = llm.requests[-1].user
+        assert "Summary of the earlier discussion: SUMMARY" in last
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_compare_mode_against_real_database(tmp_path):
+    from .fakes import FakeLLM
+
+    user = _make_user()
+    a, b = tmp_path / "a.pdf", tmp_path / "b.pdf"
+    _make_pdf(a, ["Paper A reports that mitochondria yield 30 ATP per glucose molecule."])
+    _make_pdf(b, ["Paper B reports that mitochondria yield 36 ATP per glucose molecule."])
+    llm = FakeLLM("A: 30 [c_1]. B: 36 [c_2].")
+    client = _chat_client(tmp_path, llm)
+    h = {"X-User-Id": str(user)}
+    try:
+        for name, p in (("Paper A", a), ("Paper B", b)):
+            client.post("/documents", headers=h, files={"file": (f"{name}.pdf", p.read_bytes())})
+        ids = [d["id"] for d in client.get("/documents", headers=h).json()]
+        assert len(ids) == 2
+        body = client.post(
+            "/chat", headers=h,
+            json={"question": "Compare the ATP yield per glucose", "mode": "compare", "document_ids": ids},
+        ).json()
+        user_msg = llm.requests[-1].user
+        assert user_msg.count("<document title=") == 2
+        assert {c["document_title"] for c in body["citations"]} == {"Paper A", "Paper B"}
     finally:
         app.dependency_overrides.clear()

@@ -60,3 +60,50 @@ def test_long_single_block_is_split():
     drafts = RecursiveChunker(PipelineConfig(child_tokens=100)).chunk([big])
     assert all(count_tokens(d.text) <= 400 for d in drafts if d.level == "child")
     assert len([d for d in drafts if d.level == "child"]) > 5
+
+
+class TopicEmbedder:
+    """Maps cat sentences and rocket sentences to orthogonal vectors."""
+
+    model_id, dim = "topic", 2
+
+    def embed_documents(self, texts):
+        return [[1.0, 0.0] if "cat" in t else [0.0, 1.0] for t in texts]
+
+    def embed_query(self, text):  # pragma: no cover
+        return [1.0, 0.0]
+
+
+def test_semantic_chunker_splits_at_topic_shift():
+    from app.services.ingestion.chunkers import SemanticChunker
+
+    cats = " ".join(f"The cat number {i} sits on the warm mat today." for i in range(3))
+    rockets = " ".join(f"Rocket number {i} launches into orbit at dawn." for i in range(3))
+    cfg = PipelineConfig(chunker="semantic", child_tokens=100, parent_tokens=1000)
+    drafts = SemanticChunker(cfg, TopicEmbedder()).chunk([Block(cats + " " + rockets, page=1)])
+    children = [d for d in drafts if d.level == "child"]
+    assert len(children) == 2
+    assert "cat" in children[0].text and "Rocket" not in children[0].text
+    assert "Rocket" in children[1].text and "cat" not in children[1].text
+    assert all(c.parent_index == 0 for c in children)
+
+
+def test_semantic_chunker_respects_pages_and_size():
+    from app.services.ingestion.chunkers import SemanticChunker
+
+    blocks = [Block(f"The cat number {i} sits on the mat. " * 3, page=1 + i // 2) for i in range(4)]
+    cfg = PipelineConfig(chunker="semantic", child_tokens=60, parent_tokens=1000)
+    children = [d for d in SemanticChunker(cfg, TopicEmbedder()).chunk(blocks) if d.level == "child"]
+    assert all(c.page_start == c.page_end for c in children)
+    assert all(c.token_count <= 60 + 20 for c in children)
+
+
+def test_get_chunker_selects_by_config_and_requires_embedder():
+    import pytest
+
+    from app.services.ingestion.chunkers import SemanticChunker, get_chunker
+
+    assert isinstance(get_chunker(PipelineConfig(chunker="semantic"), TopicEmbedder()), SemanticChunker)
+    assert isinstance(get_chunker(PipelineConfig()), RecursiveChunker)
+    with pytest.raises(ValueError):
+        get_chunker(PipelineConfig(chunker="semantic"))

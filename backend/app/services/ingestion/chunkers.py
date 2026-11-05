@@ -2,6 +2,7 @@ import re
 from typing import Protocol
 
 from app.config import PipelineConfig
+from app.services.embeddings import Embedder
 from app.services.ingestion.types import Block, ChunkDraft, count_tokens
 
 _SENTENCE = re.compile(r"(?<=[.!?])\s+")
@@ -109,7 +110,75 @@ class RecursiveChunker:
         return drafts
 
 
-def get_chunker(config: PipelineConfig) -> Chunker:
+def _sentence_atoms(blocks: list[Block], max_tokens: int) -> list[Block]:
+    """Like _atoms but splits every block into sentences, the unit semantic splitting compares."""
+    out: list[Block] = []
+    for block in blocks:
+        if block.block_type in _UNSPLITTABLE:
+            out.append(block)
+            continue
+        for piece in _split_text(block.text, max_tokens):
+            if piece.strip():
+                out.append(Block(piece, block.page, block.bbox, block.block_type, block.heading_path))
+    return out
+
+
+def _percentile(values: list[float], pct: int) -> float:
+    ordered = sorted(values)
+    return ordered[min(len(ordered) - 1, int(len(ordered) * pct / 100))]
+
+
+class SemanticChunker:
+    """Same parent/child shape as RecursiveChunker, but children break where the similarity
+    between adjacent sentences drops, instead of at a fixed size. Costs one embedding per
+    sentence at ingestion. No overlap: the topic boundary is the point."""
+
+    def __init__(self, config: PipelineConfig, embedder: Embedder) -> None:
+        self.config = config
+        self.embedder = embedder
+
+    def chunk(self, blocks: list[Block]) -> list[ChunkDraft]:
+        c = self.config
+        atoms = _sentence_atoms(blocks, c.child_tokens)
+        if len(atoms) < 2:
+            return RecursiveChunker(c).chunk(blocks)
+        vecs = self.embedder.embed_documents([a.text for a in atoms])
+        sims = [sum(x * y for x, y in zip(vecs[i], vecs[i + 1], strict=True)) for i in range(len(atoms) - 1)]
+        threshold = _percentile(sims, c.semantic_percentile)
+        # break_before[i] is True when a topic shift sits between atom i-1 and atom i
+        break_before = [False] + [s < threshold for s in sims]
+        min_tokens = c.child_tokens // 4
+
+        index_of = {id(a): i for i, a in enumerate(atoms)}
+        parents = _group(atoms, c.parent_tokens)
+        drafts = [_draft("parent", i, g) for i, g in enumerate(parents)]
+        child_index = 0
+        for p_idx, parent_atoms in enumerate(parents):
+            current: list[Block] = []
+            size = 0
+            groups: list[list[Block]] = []
+            for atom in parent_atoms:
+                t = count_tokens(atom.text)
+                shift = break_before[index_of[id(atom)]] and size >= min_tokens
+                page_break = bool(current) and atom.page != current[-1].page
+                if current and (size + t > c.child_tokens or shift or page_break):
+                    groups.append(current)
+                    current, size = [], 0
+                current.append(atom)
+                size += t
+            if current:
+                groups.append(current)
+            for group in groups:
+                drafts.append(_draft("child", child_index, group, parent=p_idx))
+                child_index += 1
+        return drafts
+
+
+def get_chunker(config: PipelineConfig, embedder: Embedder | None = None) -> Chunker:
     if config.chunker == "recursive":
         return RecursiveChunker(config)
+    if config.chunker == "semantic":
+        if embedder is None:
+            raise ValueError("the semantic chunker needs an embedder")
+        return SemanticChunker(config, embedder)
     raise ValueError(f"unknown chunker {config.chunker!r}")

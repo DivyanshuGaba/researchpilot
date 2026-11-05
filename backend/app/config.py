@@ -7,13 +7,24 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class PipelineConfig(BaseModel, frozen=True):
     """One object drives production and eval (architecture.md section 1)."""
 
-    chunker: str = "recursive"
+    chunker: str = "recursive"  # recursive | semantic
     child_tokens: int = 250
     parent_tokens: int = 900
     overlap_tokens: int = 40
-    retrieval_mode: str = "vector"
-    top_k: int = 5
-    prompt_version: str = "v1"
+    semantic_percentile: int = 25  # split where adjacent-sentence similarity is in the lowest N%
+    retrieval_mode: str = "hybrid_rerank"  # vector | hybrid | hybrid_rerank
+    dense_k: int = 30
+    sparse_k: int = 30
+    rrf_k: int = 60
+    rerank_candidates: int = 30
+    top_k: int = 6  # final number of child hits kept
+    max_per_parent: int = 3
+    context_token_budget: int = 6000
+    compare_per_doc: int = 3
+    history_messages: int = 6
+    summarize_batch: int = 4
+    rewrite_model: str = "claude-haiku-5-5"
+    prompt_version: str = "v2"
 
 
 class Settings(BaseSettings):
