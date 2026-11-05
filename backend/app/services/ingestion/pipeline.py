@@ -51,8 +51,10 @@ def ingest_version(
         _stage(session, version, doc, "parsing")
         parsed = parse(doc.source_type, doc.file_path)
         doc.page_count = parsed.page_count
-        if doc.source_type == "url" or parsed.title:
+        if doc.source_type == "url":
             doc.title = parsed.title
+        # For files the title stays what the user uploaded: the stored name is random and
+        # embedded PDF metadata titles are often junk.
 
         _stage(session, version, doc, "chunking")
         drafts = get_chunker(config).chunk(parsed.blocks)

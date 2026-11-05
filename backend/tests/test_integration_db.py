@@ -102,6 +102,7 @@ def test_ingestion_writes_parents_children_and_marks_ready(corpus):
     with tenant_session(user) as s:
         doc = s.get(Document, doc_id)
         assert doc is not None and doc.status == "ready" and doc.page_count == 3
+        assert doc.title == "t"  # ingestion must not replace the user-facing title
         chunks = list(s.scalars(select(Chunk).where(Chunk.document_id == doc_id)))
         parents = [c for c in chunks if c.level == "parent"]
         children = [c for c in chunks if c.level == "child"]
