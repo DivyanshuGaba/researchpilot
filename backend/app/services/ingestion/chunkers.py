@@ -41,19 +41,23 @@ def _atoms(blocks: list[Block], max_tokens: int) -> list[Block]:
     return out
 
 
-def _group(atoms: list[Block], limit: int, overlap: int = 0) -> list[list[Block]]:
+def _group(
+    atoms: list[Block], limit: int, overlap: int = 0, split_pages: bool = False
+) -> list[list[Block]]:
+    """Greedy grouping. With split_pages a group never spans pages, so a child's page is exact."""
     groups: list[list[Block]] = []
     current: list[Block] = []
     size = 0
     for atom in atoms:
         t = count_tokens(atom.text)
-        if current and size + t > limit:
+        page_break = split_pages and bool(current) and atom.page != current[-1].page
+        if current and (size + t > limit or page_break):
             groups.append(current)
             carried: list[Block] = []
             carried_size = 0
             for prev in reversed(current):  # carry a tail of atoms as overlap
                 pt = count_tokens(prev.text)
-                if carried_size + pt > overlap:
+                if page_break or carried_size + pt > overlap:
                     break
                 carried.insert(0, prev)
                 carried_size += pt
@@ -97,7 +101,9 @@ class RecursiveChunker:
         drafts.extend(parent_drafts)
         child_index = 0
         for p_idx, parent_atoms in enumerate(parents):
-            for group in _group(parent_atoms, c.child_tokens, c.overlap_tokens):
+            for group in _group(
+                parent_atoms, c.child_tokens, c.overlap_tokens, split_pages=True
+            ):
                 drafts.append(_draft("child", child_index, group, parent=p_idx))
                 child_index += 1
         return drafts

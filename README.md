@@ -48,3 +48,5 @@ pytest && ruff check . && mypy app
 ## Known limitations (Phase 1)
 
 - Dev-only auth; vector-only retrieval with no confidence gate; no streaming; scanned PDFs are rejected; DOCX and URLs report page 1.
+
+Integration tests use the compose Postgres on host port 5433 (5432 is often taken by a local Postgres): `docker compose up -d postgres`, then `alembic upgrade head` with `MIGRATION_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5433/researchpilot`.

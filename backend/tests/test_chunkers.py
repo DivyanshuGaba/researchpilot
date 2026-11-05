@@ -32,6 +32,12 @@ def test_page_range_is_tracked():
     assert all(d.page_start >= 1 for d in drafts)
 
 
+def test_children_never_span_pages():
+    blocks = [Block(f"short block {i}", page=i + 1) for i in range(4)]
+    children = [d for d in RecursiveChunker(PipelineConfig()).chunk(blocks) if d.level == "child"]
+    assert [(c.page_start, c.page_end) for c in children] == [(1, 1), (2, 2), (3, 3), (4, 4)]
+
+
 def test_tables_are_never_split():
     table = Block("| a | b |\n" * 400, page=2, block_type="table")
     cfg = PipelineConfig(child_tokens=50, parent_tokens=100)
