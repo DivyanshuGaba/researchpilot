@@ -77,6 +77,9 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = 30  # model-calling endpoints, per user
     login_attempts_per_15min: int = 10  # per client IP and email
     daily_token_budget: int = 500_000  # per user; 0 disables
+    # celery: a separate worker (needs storage both can read). inline: the API process ingests on
+    # a background thread, for single-service deployments with one disk.
+    ingest_mode: str = "celery"
     cache_enabled: bool = True
     cache_ttl_seconds: int = 3600
     # 0.95 (the architecture's starting point) served a wrong cached answer for 1 of 12

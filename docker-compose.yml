@@ -1,9 +1,14 @@
+# Default: the whole stack.   docker compose up -d --build
+#   Infra only (develop on the host): docker compose up -d postgres redis
+#   Production-like, one origin with TLS: docker compose --profile prod up -d --build
+#     (set SITE_ADDRESS=your.domain, NEXT_PUBLIC_API_URL=https://your.domain/api, COOKIE_SECURE=true,
+#      CORS_ORIGINS='["https://your.domain"]' and real secrets in .env)
 services:
   postgres:
     image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: researchpilot
     ports: ["5433:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
@@ -11,6 +16,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres -d researchpilot"]
       interval: 5s
       retries: 10
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -19,26 +25,57 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       retries: 10
+    restart: unless-stopped
 
   api:
     build: ./backend
     env_file: .env
     command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     ports: ["8000:8000"]
-    volumes: [uploads:/data/uploads]
+    volumes: [uploads:/data/uploads, models:/models]
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
+    restart: unless-stopped
 
   worker:
     build: ./backend
     env_file: .env
     command: celery -A app.workers.celery_app worker -l info -Q ingest
-    volumes: [uploads:/data/uploads]
+    volumes: [uploads:/data/uploads, models:/models]
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping -d celery@$$HOSTNAME -t 5 | grep -q pong"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports: ["3000:3000"]
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+
+  proxy:
+    profiles: ["prod"]
+    image: caddy:2-alpine
+    ports: ["80:80", "443:443"]
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    volumes: [./Caddyfile:/etc/caddy/Caddyfile:ro, caddy_data:/data]
+    depends_on: [api, frontend]
+    restart: unless-stopped
 
 volumes:
   pgdata:
   uploads:
+  models:
+  caddy_data:

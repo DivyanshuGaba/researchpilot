@@ -1,5 +1,6 @@
 import uuid
 from collections.abc import Callable, Iterator
+from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 
 from fastapi import Depends, HTTPException
@@ -88,7 +89,25 @@ def llm_dep(settings: Settings = Depends(settings_dep)) -> LLMClient:
 EnqueueFn = Callable[[str, str], None]
 
 
+_inline_pool: ThreadPoolExecutor | None = None
+
+
+def inline_enqueue(version_id: str, user_id: str) -> None:
+    """Run ingestion on a background thread of the API process (INGEST_MODE=inline).
+
+    For single-service deployments with one disk, where a separate Celery worker could not read
+    the uploaded files. One thread at a time, so ingestion cannot starve the API of CPU."""
+    global _inline_pool
+    from app.workers.tasks import run_ingestion
+
+    if _inline_pool is None:
+        _inline_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="ingest")
+    _inline_pool.submit(run_ingestion, version_id, user_id)
+
+
 def enqueue_dep() -> EnqueueFn:
+    if get_settings().ingest_mode == "inline":
+        return inline_enqueue
     from app.workers.tasks import ingest_document
 
     return lambda version_id, user_id: ingest_document.delay(version_id, user_id)

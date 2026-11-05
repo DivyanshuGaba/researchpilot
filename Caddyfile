@@ -1,0 +1,14 @@
+# Production profile: one origin for the site and the API, so the refresh cookie is same-site and
+# there is no CORS. Set SITE_ADDRESS to your domain (Caddy then obtains a TLS certificate
+# automatically); the default serves plain HTTP on :80 for local testing.
+{$SITE_ADDRESS::80} {
+	encode gzip
+	handle_path /api/* {
+		reverse_proxy api:8000 {
+			flush_interval -1   # do not buffer server-sent events
+		}
+	}
+	handle {
+		reverse_proxy frontend:3000
+	}
+}
