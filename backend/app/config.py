@@ -79,7 +79,10 @@ class Settings(BaseSettings):
     daily_token_budget: int = 500_000  # per user; 0 disables
     cache_enabled: bool = True
     cache_ttl_seconds: int = 3600
-    semantic_cache_threshold: float = 0.95
+    # 0.95 (the architecture's starting point) served a wrong cached answer for 1 of 12
+    # near-duplicate questions with different answers (BERT-BASE vs BERT-LARGE style pairs);
+    # 0.97 had none while still catching half of the true paraphrases. See docs/eval_results.md.
+    semantic_cache_threshold: float = 0.97
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
     langfuse_host: str = ""

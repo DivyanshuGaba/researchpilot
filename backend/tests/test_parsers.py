@@ -55,3 +55,11 @@ def test_parse_docx_tracks_headings(tmp_path):
 def test_ssrf_guard_blocks_non_public(url):
     with pytest.raises(parsers.ParseError):
         parsers.assert_public_url(url)
+
+
+def test_control_characters_from_math_glyphs_are_removed():
+    from app.services.ingestion.parsers import clean_text
+
+    assert clean_text("p(z|x) = exp\x00 d(z)\x01 q(x)\x1f") == "p(z|x) = exp d(z) q(x)"
+    assert clean_text("keeps\ttabs\nand newlines") == "keeps\ttabs\nand newlines"
+    assert clean_text("é ∑ ⊤ 日本語") == "é ∑ ⊤ 日本語"  # real unicode is untouched

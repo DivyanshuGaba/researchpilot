@@ -1,4 +1,5 @@
 import ipaddress
+import re
 import socket
 from pathlib import Path
 from urllib.parse import urlparse
@@ -8,6 +9,15 @@ from app.services.ingestion.types import Block, ParsedDocument
 
 class ParseError(Exception):
     pass
+
+
+_CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+
+
+def clean_text(text: str) -> str:
+    """Drop control characters. PDF extraction emits NUL and other C0 controls for math glyphs
+    and broken fonts; Postgres rejects NUL in text columns, and none of them carry meaning."""
+    return _CONTROL.sub("", text)
 
 
 def sniff_type(head: bytes) -> str | None:
@@ -30,7 +40,7 @@ def parse_pdf(path: Path) -> ParsedDocument:
     with doc:
         for page_no, page in enumerate(doc, start=1):
             for x0, y0, x1, y1, text, _n, btype in page.get_text("blocks"):
-                text = " ".join(str(text).split())
+                text = " ".join(clean_text(str(text)).split())
                 if btype == 0 and text:
                     blocks.append(Block(text, page_no, (x0, y0, x1, y1)))
         title = (doc.metadata or {}).get("title") or path.stem
@@ -50,7 +60,7 @@ def parse_docx(path: Path) -> ParsedDocument:
     blocks: list[Block] = []
     heading_path: list[str] = []
     for para in document.paragraphs:
-        text = para.text.strip()
+        text = clean_text(para.text).strip()
         if not text:
             continue
         style = para.style.name if para.style is not None else ""
@@ -89,7 +99,7 @@ def parse_url(url: str) -> ParsedDocument:
     text = trafilatura.extract(downloaded) if downloaded else None
     if not text:
         raise ParseError("could not extract content from URL")
-    blocks = [Block(p.strip(), 1) for p in text.split("\n") if p.strip()]
+    blocks = [Block(clean_text(p).strip(), 1) for p in text.split("\n") if clean_text(p).strip()]
     return ParsedDocument(title=url, blocks=blocks, page_count=1)
 
 

@@ -44,6 +44,7 @@ def _resp(status):
         (anthropic.AuthenticationError("bad key sk-ant-SECRET", response=_resp(401), body=None), "misconfigured"),
         (anthropic.PermissionDeniedError("nope", response=_resp(403), body=None), "misconfigured"),
         (TimeoutError(), "timeout"),
+        (anthropic.BadRequestError("Your credit balance is too low to access the Anthropic API.", response=_resp(400), body=None), "billing"),
     ],
 )
 def test_provider_errors_map_to_safe_categories(exc, kind):
@@ -54,7 +55,7 @@ def test_provider_errors_map_to_safe_categories(exc, kind):
 
 def test_programming_errors_and_bad_requests_are_not_masked_as_outages():
     assert classify_error(ValueError("bug")) is None
-    assert classify_error(anthropic.BadRequestError("invalid", response=_resp(400), body=None)) is None
+    assert classify_error(anthropic.BadRequestError("invalid", response=_resp(400), body=None)) is None  # a real bug stays visible
     assert classify_error(anthropic.NotFoundError("no model", response=_resp(404), body=None)) is None
 
 

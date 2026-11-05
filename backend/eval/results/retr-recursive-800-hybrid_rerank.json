@@ -1,0 +1,4210 @@
+{
+ "label": "retr-recursive-800-hybrid_rerank",
+ "created": "2026-11-05T19:37:21+00:00",
+ "git_sha": "7f835e0",
+ "config": {
+  "chunker": "recursive",
+  "child_tokens": 200,
+  "parent_tokens": 800,
+  "overlap_tokens": 33,
+  "semantic_percentile": 25,
+  "retrieval_mode": "hybrid_rerank",
+  "dense_k": 30,
+  "sparse_k": 30,
+  "rrf_k": 60,
+  "rerank_candidates": 30,
+  "top_k": 6,
+  "max_per_parent": 3,
+  "context_token_budget": 6000,
+  "compare_per_doc": 3,
+  "history_messages": 6,
+  "summarize_batch": 4,
+  "rewrite_model": "claude-haiku-5-5",
+  "quiz_max_passages": 12,
+  "summary_max_sections": 150,
+  "summary_concurrency": 5,
+  "summary_reduce_tokens": 6000,
+  "prompt_version": "v3"
+ },
+ "config_hash": "48e15e0889bbaa02",
+ "dataset": {
+  "file": "dataset.jsonl",
+  "sha256": "5f0e9de403bf8459",
+  "questions": 49
+ },
+ "models": {
+  "answer": "claude-sonnet-5-5",
+  "judge": "claude-opus-5-5",
+  "embedding": "BAAI/bge-small-en-v1.5",
+  "reranker": "cross_encoder",
+  "min_score": 0.05
+ },
+ "questions": [
+  {
+   "id": "att-01",
+   "type": "factual",
+   "question": "How many identical layers make up the Transformer's encoder stack?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9995
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9988
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9856
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.8908
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.548
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.4506
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.3911
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.1689
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.1455
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0891
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9995,
+   "timings_ms": {
+    "embed": 15,
+    "dense": 10,
+    "sparse": 15,
+    "rerank": 164,
+    "retrieve_total": 207
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "att-02",
+   "type": "factual",
+   "question": "How many parallel attention heads does the Transformer use, and what is the dimension of each head?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9793
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9726
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.8298
+    },
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.4451
+    },
+    {
+     "doc": "attention",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.3434
+    },
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.1634
+    },
+    {
+     "doc": "attention",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0711
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0429
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.0194
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0148
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9793,
+   "timings_ms": {
+    "embed": 22,
+    "dense": 24,
+    "sparse": 38,
+    "rerank": 170,
+    "retrieve_total": 262
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "att-03",
+   "type": "factual",
+   "question": "What is the inner-layer dimensionality of the position-wise feed-forward network?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9075
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9011
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.6569
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0807
+    },
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.002
+    },
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0003
+    },
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0001
+    },
+    {
+     "doc": "attention",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0
+    },
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9075,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 25,
+    "sparse": 32,
+    "rerank": 159,
+    "retrieve_total": 250
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.5
+   },
+   "refused": false
+  },
+  {
+   "id": "att-04",
+   "type": "factual",
+   "question": "What BLEU score did the big Transformer achieve on the WMT 2014 English-to-German translation task?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 1.0
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 1.0
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9997
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.999
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9963
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.9873
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9261
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.8857
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.1995
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.1869
+    }
+   ],
+   "gated": false,
+   "top_score": 1.0,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 28,
+    "sparse": 39,
+    "rerank": 199,
+    "retrieve_total": 300
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.3333333333333333
+   },
+   "refused": false
+  },
+  {
+   "id": "att-05",
+   "type": "factual",
+   "question": "How long did the big Transformer take to train, and on what hardware?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9958
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.9807
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9288
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.6614
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.361
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0772
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.0715
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.041
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0119
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0074
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9958,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 27,
+    "sparse": 24,
+    "rerank": 184,
+    "retrieve_total": 269
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "att-06",
+   "type": "factual",
+   "question": "For how many steps, and for how many hours, were the base models trained?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.9999
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.3327
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.1865
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0959
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0722
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0299
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0208
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0101
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0079
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0063
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9999,
+   "timings_ms": {
+    "embed": 15,
+    "dense": 20,
+    "sparse": 20,
+    "rerank": 144,
+    "retrieve_total": 205
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "att-07",
+   "type": "factual",
+   "question": "What value of warmup_steps was used in the learning rate schedule?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.9973
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.9288
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.8437
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0015
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.001
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.001
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0007
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0005
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0004
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0002
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9973,
+   "timings_ms": {
+    "embed": 17,
+    "dense": 19,
+    "sparse": 24,
+    "rerank": 144,
+    "retrieve_total": 210
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "att-08",
+   "type": "factual",
+   "question": "What beam size and length penalty were used during decoding?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.8377
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.756
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.3139
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.0093
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0008
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0005
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0004
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0004
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0003
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0001
+    }
+   ],
+   "gated": false,
+   "top_score": 0.8377,
+   "timings_ms": {
+    "embed": 18,
+    "dense": 20,
+    "sparse": 25,
+    "rerank": 158,
+    "retrieve_total": 228
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "att-09",
+   "type": "factual",
+   "question": "Why did the authors choose sinusoidal positional encodings over learned positional embeddings?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.9905
+    },
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.945
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.7463
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0724
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0569
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0281
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0215
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0205
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0052
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0032
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9905,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 17,
+    "sparse": 19,
+    "rerank": 161,
+    "retrieve_total": 230
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "att-10",
+   "type": "factual",
+   "question": "How are the dot products scaled in the Transformer's attention function?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9989
+    },
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9978
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9955
+    },
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9955
+    },
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9946
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9448
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.4221
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.1713
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0954
+    },
+    {
+     "doc": "attention",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0599
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9989,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 24,
+    "sparse": 31,
+    "rerank": 170,
+    "retrieve_total": 258
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-01",
+   "type": "factual",
+   "question": "How many layers, what hidden size, how many attention heads and how many parameters does BERT-BASE have?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9989
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.975
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9698
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9276
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.8628
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.6366
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.2416
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.054
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0232
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0144
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9989,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 27,
+    "sparse": 37,
+    "rerank": 193,
+    "retrieve_total": 292
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-02",
+   "type": "factual",
+   "question": "What percentage of tokens does BERT mask for the masked language model, and how are the chosen tokens replaced?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.979
+    },
+    {
+     "doc": "bert",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.9737
+    },
+    {
+     "doc": "bert",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.9608
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9607
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.9537
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9283
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.8901
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.7807
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.7242
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.608
+    }
+   ],
+   "gated": false,
+   "top_score": 0.979,
+   "timings_ms": {
+    "embed": 24,
+    "dense": 22,
+    "sparse": 36,
+    "rerank": 182,
+    "retrieve_total": 270
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 0.5,
+    "hit@10": 1.0,
+    "recall@10": 0.5,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-03",
+   "type": "factual",
+   "question": "Which corpora was BERT pre-trained on and how large are they?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.9878
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.8968
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.8365
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.7772
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.7078
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.5998
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.5618
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.5012
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.428
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.3308
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9878,
+   "timings_ms": {
+    "embed": 24,
+    "dense": 28,
+    "sparse": 31,
+    "rerank": 185,
+    "retrieve_total": 274
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 0.0,
+    "recall@5": 0.0,
+    "hit@10": 0.0,
+    "recall@10": 0.0,
+    "rr": 0.0
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-04",
+   "type": "factual",
+   "question": "What batch size and how many steps were used to pre-train BERT?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.9953
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.9922
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.987
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.9834
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.9777
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.8164
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.8138
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.7701
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.6895
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.5832
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9953,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 25,
+    "sparse": 35,
+    "rerank": 176,
+    "retrieve_total": 271
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.2
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-05",
+   "type": "factual",
+   "question": "What GLUE score did BERT achieve?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9985
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.9959
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9846
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.9655
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.3145
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.054
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0301
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0278
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0233
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0216
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9985,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 19,
+    "sparse": 19,
+    "rerank": 194,
+    "retrieve_total": 262
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-06",
+   "type": "factual",
+   "question": "What test F1 did BERT reach on SQuAD v1.1?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9988
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.9809
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.9683
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.9505
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.947
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.7567
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.3613
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.2236
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.1548
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.1399
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9988,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 27,
+    "sparse": 28,
+    "rerank": 220,
+    "retrieve_total": 308
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-07",
+   "type": "factual",
+   "question": "What vocabulary does BERT use?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9613
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9576
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.9236
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.8761
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.5526
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.5113
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.4543
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.3919
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.3816
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.2523
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9613,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 27,
+    "sparse": 30,
+    "rerank": 176,
+    "retrieve_total": 266
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-08",
+   "type": "factual",
+   "question": "On how many Cloud TPUs was BERT-BASE trained?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.9996
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.7519
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.6921
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.6006
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.5691
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.5608
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.1784
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.1782
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.1483
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.1344
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9996,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 26,
+    "sparse": 29,
+    "rerank": 172,
+    "retrieve_total": 259
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-09",
+   "type": "factual",
+   "question": "Which activation function does BERT use instead of the standard relu?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.3101
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0647
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0377
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0191
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.015
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0115
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0099
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0079
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0068
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0059
+    }
+   ],
+   "gated": false,
+   "top_score": 0.3101,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 24,
+    "sparse": 33,
+    "rerank": 168,
+    "retrieve_total": 257
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 0.0,
+    "recall@5": 0.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.1
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-01",
+   "type": "factual",
+   "question": "What are the two RAG formulations and how do they differ?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9896
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.1195
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0744
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0453
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0445
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.031
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0261
+    },
+    {
+     "doc": "rag",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0255
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0224
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0114
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9896,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 24,
+    "sparse": 30,
+    "rerank": 215,
+    "retrieve_total": 304
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.25
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-02",
+   "type": "factual",
+   "question": "Which retriever does RAG use?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9997
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.9962
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9896
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9863
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9672
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9515
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.8719
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.733
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.6355
+    },
+    {
+     "doc": "rag",
+     "p0": 19,
+     "p1": 19,
+     "score": 0.5758
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9997,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 26,
+    "sparse": 23,
+    "rerank": 212,
+    "retrieve_total": 298
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.25
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-03",
+   "type": "factual",
+   "question": "How was the Wikipedia knowledge source prepared for RAG?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9769
+    },
+    {
+     "doc": "rag",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.8584
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.8478
+    },
+    {
+     "doc": "rag",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.5788
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.5679
+    },
+    {
+     "doc": "rag",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.3758
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.3567
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.2987
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.2122
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.2073
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9769,
+   "timings_ms": {
+    "embed": 29,
+    "dense": 25,
+    "sparse": 25,
+    "rerank": 217,
+    "retrieve_total": 305
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-04",
+   "type": "factual",
+   "question": "Which library and approximation does RAG use to build its document index?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9735
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9623
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.8948
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.8366
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.8036
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.7899
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.5643
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.5575
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.2361
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.1969
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9735,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 22,
+    "sparse": 32,
+    "rerank": 215,
+    "retrieve_total": 302
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-05",
+   "type": "factual",
+   "question": "What exact match score did RAG-Sequence reach on Natural Questions?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 19,
+     "p1": 19,
+     "score": 0.9864
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9594
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9054
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.8732
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.8065
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.701
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.5855
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.4593
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.438
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.3178
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9864,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 24,
+    "sparse": 34,
+    "rerank": 220,
+    "retrieve_total": 310
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.2
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-06",
+   "type": "factual",
+   "question": "What did the index hot-swapping experiment show about mismatched document indices?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.849
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.0145
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.0076
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.0056
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0019
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0016
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.0005
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0004
+    },
+    {
+     "doc": "rag",
+     "p0": 19,
+     "p1": 19,
+     "score": 0.0003
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0003
+    }
+   ],
+   "gated": false,
+   "top_score": 0.849,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 24,
+    "sparse": 33,
+    "rerank": 165,
+    "retrieve_total": 254
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 0.0,
+    "recall@5": 0.0,
+    "hit@10": 0.0,
+    "recall@10": 0.0,
+    "rr": 0.0
+   },
+   "refused": false
+  },
+  {
+   "id": "lim-01",
+   "type": "factual",
+   "question": "What shape of performance curve do the authors observe as the position of relevant information changes?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9985
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9813
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.977
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9748
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9697
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9531
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9481
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.8916
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.8676
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.8476
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9985,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 24,
+    "sparse": 35,
+    "rerank": 164,
+    "retrieve_total": 254
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "lim-02",
+   "type": "factual",
+   "question": "Which language models did the authors evaluate?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 11,
+     "p1": 11,
+     "score": 0.9296
+    },
+    {
+     "doc": "rag",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.8891
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.7806
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.7668
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.7214
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.5588
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.5219
+    },
+    {
+     "doc": "bert",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.4979
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.475
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.4493
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9296,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 28,
+    "sparse": 29,
+    "rerank": 178,
+    "retrieve_total": 268
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 0.0,
+    "recall@5": 0.0,
+    "hit@10": 0.0,
+    "recall@10": 0.0,
+    "rr": 0.0
+   },
+   "refused": false
+  },
+  {
+   "id": "lim-03",
+   "type": "factual",
+   "question": "Which dataset is used for the multi-document question answering task?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9951
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9928
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9925
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.9904
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.986
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9846
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9842
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.9791
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9661
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.9649
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9951,
+   "timings_ms": {
+    "embed": 29,
+    "dense": 27,
+    "sparse": 34,
+    "rerank": 153,
+    "retrieve_total": 250
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.5
+   },
+   "refused": false
+  },
+  {
+   "id": "lim-04",
+   "type": "factual",
+   "question": "How does GPT-3.5-Turbo's multi-document accuracy compare with its closed-book accuracy?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9979
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.997
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.994
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.9808
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.9735
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.9693
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.9587
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.9365
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9327
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9022
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9979,
+   "timings_ms": {
+    "embed": 29,
+    "dense": 24,
+    "sparse": 34,
+    "rerank": 189,
+    "retrieve_total": 284
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 0.0,
+    "recall@5": 0.0,
+    "hit@10": 0.0,
+    "recall@10": 0.0,
+    "rr": 0.0
+   },
+   "refused": false
+  },
+  {
+   "id": "lim-05",
+   "type": "factual",
+   "question": "Which retriever is used in the retriever-reader case study?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9529
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9407
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9219
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.6206
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 11,
+     "p1": 11,
+     "score": 0.5537
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.4957
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.184
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.1147
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0696
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.0379
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9529,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 26,
+    "sparse": 28,
+    "rerank": 147,
+    "retrieve_total": 233
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.5
+   },
+   "refused": false
+  },
+  {
+   "id": "mh-01",
+   "type": "multi_hop",
+   "question": "How many layers does the Transformer's encoder have and what output dimension do its sub-layers and embeddings produce?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9987
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9841
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9431
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.8606
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.7238
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.6473
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.5851
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.2157
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.1609
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.1115
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9987,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 25,
+    "sparse": 37,
+    "rerank": 152,
+    "retrieve_total": 251
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "mh-02",
+   "type": "multi_hop",
+   "question": "By how many parameters does BERT-LARGE exceed BERT-BASE, and how many layers does each have?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.991
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9775
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.8686
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.8321
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.592
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.5064
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.2727
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.1289
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.1133
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0829
+    }
+   ],
+   "gated": false,
+   "top_score": 0.991,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 26,
+    "sparse": 30,
+    "rerank": 178,
+    "retrieve_total": 267
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "mh-03",
+   "type": "multi_hop",
+   "question": "How many times more training steps did the Transformer big models get than the base models?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.9976
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9886
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.986
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.762
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.6884
+    },
+    {
+     "doc": "bert",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.3254
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.2933
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.1281
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0824
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0767
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9976,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 21,
+    "sparse": 30,
+    "rerank": 181,
+    "retrieve_total": 265
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "mh-04",
+   "type": "multi_hop",
+   "question": "How much CPU memory does the RAG document index need, and how much after compression?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.9965
+    },
+    {
+     "doc": "rag",
+     "p0": 19,
+     "p1": 19,
+     "score": 0.0342
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0101
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0085
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0063
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.0059
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0043
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0038
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0024
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0015
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9965,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 26,
+    "sparse": 34,
+    "rerank": 221,
+    "retrieve_total": 317
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "tab-01",
+   "type": "table",
+   "question": "What BLEU scores did the Transformer base and big models get on English-German and English-French?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9998
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9996
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9992
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9966
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9889
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9718
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.8947
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.5787
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0803
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0388
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9998,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 25,
+    "sparse": 39,
+    "rerank": 195,
+    "retrieve_total": 294
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "tab-02",
+   "type": "table",
+   "question": "How many parameters (in millions) does the big Transformer have in the model variations table?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9828
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.8783
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.857
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.7684
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.5347
+    },
+    {
+     "doc": "rag",
+     "p0": 19,
+     "p1": 19,
+     "score": 0.2328
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.1994
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.1884
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0957
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0511
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9828,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 24,
+    "sparse": 37,
+    "rerank": 195,
+    "retrieve_total": 291
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.25
+   },
+   "refused": false
+  },
+  {
+   "id": "tab-03",
+   "type": "table",
+   "question": "What accuracy did BERT-LARGE get on the SWAG test set?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9666
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.9611
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.8949
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.8927
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.7669
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.6344
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.2691
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.1916
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.1186
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0299
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9666,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 24,
+    "sparse": 26,
+    "rerank": 214,
+    "retrieve_total": 296
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.25
+   },
+   "refused": false
+  },
+  {
+   "id": "tab-04",
+   "type": "table",
+   "question": "What F1 score did the 4-layer Transformer get on WSJ-only discriminative parsing?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.9969
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9877
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.8681
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.1169
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0986
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0318
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0134
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0111
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0014
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.001
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9969,
+   "timings_ms": {
+    "embed": 24,
+    "dense": 15,
+    "sparse": 16,
+    "rerank": 202,
+    "retrieve_total": 264
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "cmp-01",
+   "type": "comparison",
+   "question": "Which model has more parameters, BERT-LARGE or the big Transformer from the translation paper?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9862
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9747
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9631
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9376
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.7556
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.7409
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.5826
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.4029
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.3302
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.3105
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9862,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 25,
+    "sparse": 39,
+    "rerank": 191,
+    "retrieve_total": 289
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 0.5,
+    "hit@10": 1.0,
+    "recall@10": 0.5,
+    "rr": 0.5
+   },
+   "refused": false
+  },
+  {
+   "id": "cmp-02",
+   "type": "comparison",
+   "question": "How many attention heads does BERT-BASE have compared with the base Transformer?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9948
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.5962
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.5445
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.3703
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.2495
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.1512
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0498
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0167
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0167
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0125
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9948,
+   "timings_ms": {
+    "embed": 29,
+    "dense": 24,
+    "sparse": 37,
+    "rerank": 176,
+    "retrieve_total": 275
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "cmp-03",
+   "type": "comparison",
+   "question": "RAG's DPR retriever is built on BERT-base. How many parameters do its encoders have, and how does that compare with BERT-BASE's stated size?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.9962
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9798
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9414
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.8885
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.6261
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.6141
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.5075
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.2497
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.1396
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.1251
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9962,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 25,
+    "sparse": 46,
+    "rerank": 235,
+    "retrieve_total": 340
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 0.5,
+    "hit@10": 1.0,
+    "recall@10": 0.5,
+    "rr": 1.0
+   },
+   "refused": false
+  },
+  {
+   "id": "una-01",
+   "type": "unanswerable",
+   "question": "What is the capital of Mongolia?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 27,
+    "sparse": 7,
+    "rerank": 155,
+    "retrieve_total": 222
+   },
+   "degraded": [],
+   "refused": true
+  },
+  {
+   "id": "una-02",
+   "type": "unanswerable",
+   "question": "Who wrote the novel Pride and Prejudice?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0008
+    },
+    {
+     "doc": "rag",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.0003
+    },
+    {
+     "doc": "rag",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0002
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0001
+    },
+    {
+     "doc": "bert",
+     "p0": 11,
+     "p1": 11,
+     "score": 0.0001
+    },
+    {
+     "doc": "bert",
+     "p0": 11,
+     "p1": 11,
+     "score": 0.0001
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0001
+    },
+    {
+     "doc": "bert",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 11,
+     "p1": 11,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0008,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 26,
+    "sparse": 12,
+    "rerank": 172,
+    "retrieve_total": 241
+   },
+   "degraded": [],
+   "refused": true
+  },
+  {
+   "id": "una-03",
+   "type": "unanswerable",
+   "question": "How do I bake sourdough bread at home?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 27,
+    "sparse": 8,
+    "rerank": 247,
+    "retrieve_total": 315
+   },
+   "degraded": [],
+   "refused": true
+  },
+  {
+   "id": "una-04",
+   "type": "unanswerable",
+   "question": "Explain the rules of castling in chess.",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0
+    },
+    {
+     "doc": "attention",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.0
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 35,
+    "sparse": 7,
+    "rerank": 172,
+    "retrieve_total": 246
+   },
+   "degraded": [],
+   "refused": true
+  },
+  {
+   "id": "una-05",
+   "type": "unanswerable",
+   "question": "What is the boiling point of tungsten in degrees Celsius?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 19,
+     "p1": 19,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0
+    },
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0,
+   "timings_ms": {
+    "embed": 23,
+    "dense": 22,
+    "sparse": 15,
+    "rerank": 203,
+    "retrieve_total": 269
+   },
+   "degraded": [],
+   "refused": true
+  },
+  {
+   "id": "una-06",
+   "type": "unanswerable",
+   "question": "What was the carbon footprint, in kilograms of CO2, of training the Transformer?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0094
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0038
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0022
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0016
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.0014
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0013
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0006
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0003
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0002
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0001
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0094,
+   "timings_ms": {
+    "embed": 24,
+    "dense": 22,
+    "sparse": 32,
+    "rerank": 190,
+    "retrieve_total": 275
+   },
+   "degraded": [],
+   "refused": true
+  },
+  {
+   "id": "una-07",
+   "type": "unanswerable",
+   "question": "How many parameters does GPT-4 have?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.9384
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9347
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.8931
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.7144
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.6302
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.6141
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.4256
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.2759
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.2177
+    },
+    {
+     "doc": "rag",
+     "p0": 19,
+     "p1": 19,
+     "score": 0.1787
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9384,
+   "timings_ms": {
+    "embed": 24,
+    "dense": 27,
+    "sparse": 24,
+    "rerank": 176,
+    "retrieve_total": 257
+   },
+   "degraded": [],
+   "refused": false
+  },
+  {
+   "id": "una-08",
+   "type": "unanswerable",
+   "question": "What learning rate was used to train the RAG models?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.9023
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.8732
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.6708
+    },
+    {
+     "doc": "rag",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.575
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.5074
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.4627
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.3042
+    },
+    {
+     "doc": "rag",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.2357
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.2171
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.1734
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9023,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 27,
+    "sparse": 37,
+    "rerank": 162,
+    "retrieve_total": 259
+   },
+   "degraded": [],
+   "refused": false
+  }
+ ],
+ "aggregate": {
+  "n": 49,
+  "n_answerable": 41,
+  "hit@5": 0.878,
+  "recall@5": 0.8415,
+  "hit@10": 0.9024,
+  "recall@10": 0.8659,
+  "mrr": 0.7033,
+  "by_type": {
+   "factual": {
+    "n": 30,
+    "hit@5": 0.8333,
+    "recall@5": 0.8167,
+    "mrr": 0.6611
+   },
+   "multi_hop": {
+    "n": 4,
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "mrr": 1.0
+   },
+   "table": {
+    "n": 4,
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "mrr": 0.625
+   },
+   "comparison": {
+    "n": 3,
+    "hit@5": 1.0,
+    "recall@5": 0.6667,
+    "mrr": 0.8333
+   }
+  },
+  "latency_ms": {
+   "embed": {
+    "p50": 26.0,
+    "p95": 29.0
+   },
+   "dense": {
+    "p50": 25.0,
+    "p95": 28.0
+   },
+   "sparse": {
+    "p50": 30.0,
+    "p95": 39.0
+   },
+   "rerank": {
+    "p50": 178.0,
+    "p95": 220.6
+   },
+   "retrieve_total": {
+    "p50": 267.0,
+    "p95": 313.0
+   }
+  }
+ }
+}

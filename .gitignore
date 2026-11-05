@@ -10,3 +10,6 @@ storage/
 .ruff_cache/
 *.egg-info/
 CLAUDE.md
+eval/docs/*.pdf
+eval/.index.json
+eval/results/*.tmp

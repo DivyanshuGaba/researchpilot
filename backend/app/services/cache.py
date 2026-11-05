@@ -3,7 +3,8 @@
 1. Prompt cache: the static system prompt is marked cacheable in the LLM client.
 2. Embedding cache: hash(model id + text) -> vector.
 3. Exact response cache: hash(user, document-set version, standalone query, config, mode).
-4. Semantic cache: reuse an answer when the query embedding is at least 0.95 similar, scoped to
+4. Semantic cache: reuse an answer when the query embedding is at least 0.97 similar (see the
+   eval: 0.95 gave wrong hits on near-duplicate questions), scoped to
    the same user, document-set version and config.
 
 Correctness rules: every key contains the document-set version hash, so adding, deleting or

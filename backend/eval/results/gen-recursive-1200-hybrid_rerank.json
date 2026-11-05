@@ -1,0 +1,6068 @@
+{
+ "label": "gen-recursive-1200-hybrid_rerank",
+ "created": "2026-11-05T19:40:32+00:00",
+ "git_sha": "7f835e0",
+ "config": {
+  "chunker": "recursive",
+  "child_tokens": 300,
+  "parent_tokens": 1200,
+  "overlap_tokens": 50,
+  "semantic_percentile": 25,
+  "retrieval_mode": "hybrid_rerank",
+  "dense_k": 30,
+  "sparse_k": 30,
+  "rrf_k": 60,
+  "rerank_candidates": 30,
+  "top_k": 6,
+  "max_per_parent": 3,
+  "context_token_budget": 6000,
+  "compare_per_doc": 3,
+  "history_messages": 6,
+  "summarize_batch": 4,
+  "rewrite_model": "claude-haiku-5-5",
+  "quiz_max_passages": 12,
+  "summary_max_sections": 150,
+  "summary_concurrency": 5,
+  "summary_reduce_tokens": 6000,
+  "prompt_version": "v3"
+ },
+ "config_hash": "f7e5dd4de317c44e",
+ "dataset": {
+  "file": "dataset.jsonl",
+  "sha256": "5f0e9de403bf8459",
+  "questions": 49
+ },
+ "models": {
+  "answer": "claude-sonnet-5-5",
+  "judge": "claude-opus-5-5",
+  "embedding": "BAAI/bge-small-en-v1.5",
+  "reranker": "cross_encoder",
+  "min_score": 0.05
+ },
+ "questions": [
+  {
+   "id": "att-01",
+   "type": "factual",
+   "question": "How many identical layers make up the Transformer's encoder stack?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9998
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9974
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.8841
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.867
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.797
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.6634
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.1716
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0953
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0477
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0179
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9998,
+   "timings_ms": {
+    "embed": 5949,
+    "dense": 39,
+    "sparse": 14,
+    "rerank": 1469,
+    "retrieve_total": 7476,
+    "generation": 1924
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The Transformer's encoder is a stack of N = 6 identical layers. Each layer has two sub-layers: a multi-head self-attention mechanism and a position-wise fully connected feed-forward network [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 3
+    }
+   ],
+   "answer_cost_usd": 0.01455,
+   "answer_tokens": [
+    6915,
+    72
+   ],
+   "judge_cost_usd": 0.029199,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly states N = 6 identical layers and the two sub-layers, both directly supported by c_1."
+   },
+   "refused": false
+  },
+  {
+   "id": "att-02",
+   "type": "factual",
+   "question": "How many parallel attention heads does the Transformer use, and what is the dimension of each head?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9848
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.8655
+    },
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.4676
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.2673
+    },
+    {
+     "doc": "attention",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.2512
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.2036
+    },
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.1634
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0819
+    },
+    {
+     "doc": "attention",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0711
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0257
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9848,
+   "timings_ms": {
+    "embed": 41,
+    "dense": 24,
+    "sparse": 16,
+    "rerank": 243,
+    "retrieve_total": 333,
+    "generation": 2335
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The base Transformer uses h = 8 parallel attention heads. Each head has dimension dk = dv = dmodel/h = 64, with dmodel = 512 [c_1][c_2]. Because each head has a reduced dimension, the total computational cost is similar to single-head attention at full dimensionality [c_1].\n\nThe \"big\" model in the variations table uses 16 heads with dmodel = 1024 [c_3], but the 8-head, 64-dimension setup is the base configuration.",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 5
+    },
+    {
+     "marker": "c_2",
+     "doc": "attention",
+     "page": 4
+    },
+    {
+     "marker": "c_3",
+     "doc": "attention",
+     "page": 9
+    }
+   ],
+   "answer_cost_usd": 0.012268,
+   "answer_tokens": [
+    5334,
+    160
+   ],
+   "judge_cost_usd": 0.025555,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly states 8 heads with dk = dv = 64, and the extra details are supported: dmodel = 512 (c_1/c_2), comparable cost to single-head attention (c_1), and the big model's 16 heads with dmodel = 1024 (c_3)."
+   },
+   "refused": false
+  },
+  {
+   "id": "att-03",
+   "type": "factual",
+   "question": "What is the inner-layer dimensionality of the position-wise feed-forward network?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9625
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.7184
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.3603
+    },
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.001
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0003
+    },
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0001
+    },
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0001
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0
+    },
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    },
+    {
+     "doc": "attention",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9625,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 25,
+    "sparse": 18,
+    "rerank": 251,
+    "retrieve_total": 329,
+    "generation": 1839
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The inner layer of the position-wise feed-forward network has dimensionality dff = 2048. The input and output dimensionality is dmodel = 512 [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 5
+    }
+   ],
+   "answer_cost_usd": 0.017346,
+   "answer_tokens": [
+    8398,
+    55
+   ],
+   "judge_cost_usd": 0.035199,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer gives dff = 2048 as in the reference, and c_1 supports both dff = 2048 and dmodel = 512."
+   },
+   "refused": false
+  },
+  {
+   "id": "att-04",
+   "type": "factual",
+   "question": "What BLEU score did the big Transformer achieve on the WMT 2014 English-to-German translation task?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 1.0
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.996
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9824
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9604
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.8735
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.7256
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.3438
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0977
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0025
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0007
+    }
+   ],
+   "gated": false,
+   "top_score": 1.0,
+   "timings_ms": {
+    "embed": 16,
+    "dense": 12,
+    "sparse": 12,
+    "rerank": 273,
+    "retrieve_total": 318,
+    "generation": 2183
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.3333333333333333
+   },
+   "answer": "The big Transformer achieved a BLEU score of 28.4 on the WMT 2014 English-to-German task, a new state of the art. It outperformed the best previously reported models, including ensembles, by more than 2.0 BLEU [c_1]. The abstract and Table 2 report the same figure [c_1][c_2]. Training took 3.5 days on 8 P100 GPUs [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 8
+    },
+    {
+     "marker": "c_2",
+     "doc": "attention",
+     "page": 1
+    }
+   ],
+   "answer_cost_usd": 0.016904,
+   "answer_tokens": [
+    7787,
+    133
+   ],
+   "judge_cost_usd": 0.036975,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer gives 28.4 BLEU, matching the reference, and every claim is supported by the cited Table 2, Section 6.1 and abstract text."
+   },
+   "refused": false
+  },
+  {
+   "id": "att-05",
+   "type": "factual",
+   "question": "How long did the big Transformer take to train, and on what hardware?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9942
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.4375
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0668
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.0621
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0291
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0261
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0182
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0096
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0077
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0072
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9942,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 27,
+    "sparse": 20,
+    "rerank": 277,
+    "retrieve_total": 357,
+    "generation": 2859
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The big Transformer models were trained for 300,000 steps, which took 3.5 days (about 1.0 second per step). Training ran on one machine with 8 NVIDIA P100 GPUs [c_1]. The abstract also mentions 3.5 days on eight GPUs for the English-to-French result [c_3].\n\nFor comparison, the base models trained for 100,000 steps, or about 12 hours, on the same hardware [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 8
+    },
+    {
+     "marker": "c_3",
+     "doc": "attention",
+     "page": 1
+    }
+   ],
+   "answer_cost_usd": 0.016986,
+   "answer_tokens": [
+    7773,
+    144
+   ],
+   "judge_cost_usd": 0.033855,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer matches the reference (3.5 days on 8 P100 GPUs), and every claim, including the step counts, step time and base-model comparison, is supported by c_1 and c_3."
+   },
+   "refused": false
+  },
+  {
+   "id": "att-06",
+   "type": "factual",
+   "question": "For how many steps, and for how many hours, were the base models trained?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.962
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.2922
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.1808
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.1288
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.051
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0362
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0213
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0158
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0023
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0012
+    }
+   ],
+   "gated": false,
+   "top_score": 0.962,
+   "timings_ms": {
+    "embed": 19,
+    "dense": 12,
+    "sparse": 11,
+    "rerank": 266,
+    "retrieve_total": 314,
+    "generation": 4763
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "In the Transformer paper (\"Attention Is All You Need\"), the base models were trained for a total of 100,000 steps, which took about 12 hours. Each step took about 0.4 seconds on one machine with 8 NVIDIA P100 GPUs [c_1].\n\nIf you meant BERT<sub>BASE</sub>, it was pre-trained for 1,000,000 steps [c_3]. The source says each pre-training took 4 days, and it gives no separate figure in hours [c_3].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 7
+    },
+    {
+     "marker": "c_3",
+     "doc": "bert",
+     "page": 13
+    }
+   ],
+   "answer_cost_usd": 0.018504,
+   "answer_tokens": [
+    7272,
+    396
+   ],
+   "judge_cost_usd": 0.031855,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly gives 100,000 steps and 12 hours from c_1, and its extra BERT detail about 1M steps and 4 days is accurately supported by c_3."
+   },
+   "refused": false
+  },
+  {
+   "id": "att-07",
+   "type": "factual",
+   "question": "What value of warmup_steps was used in the learning rate schedule?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.9919
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.8586
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0015
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0011
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0008
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0002
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0001
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9919,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 23,
+    "sparse": 21,
+    "rerank": 313,
+    "retrieve_total": 390,
+    "generation": 3072
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The Transformer paper used warmup_steps = 4000. The learning rate increases linearly for the first 4000 training steps, then decreases proportionally to the inverse square root of the step number [c_1].\n\nIf you meant the BERT paper, its pre-training used learning rate warmup over the first 10,000 steps, followed by linear decay [c_2].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 7
+    },
+    {
+     "marker": "c_2",
+     "doc": "bert",
+     "page": 13
+    }
+   ],
+   "answer_cost_usd": 0.020706,
+   "answer_tokens": [
+    9178,
+    235
+   ],
+   "judge_cost_usd": 0.039239,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly states warmup_steps = 4000 from the Transformer paper, and its extra note on BERT's 10,000-step warmup is accurately supported by c_2."
+   },
+   "refused": false
+  },
+  {
+   "id": "att-08",
+   "type": "factual",
+   "question": "What beam size and length penalty were used during decoding?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9729
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.4938
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0145
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.0104
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0008
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0004
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0001
+    },
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0001
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0001
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0001
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9729,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 26,
+    "sparse": 23,
+    "rerank": 241,
+    "retrieve_total": 325,
+    "generation": 5678
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The question doesn't name a paper, so here is what the sources say for each.\n\n**Attention Is All You Need**\n- Translation: beam size 4 and length penalty α = 0.6 [c_1].\n- English constituency parsing: beam size 21 and α = 0.3, for both the WSJ-only and semi-supervised settings [c_2].\n\n**Retrieval-Augmented Generation (RAG)**\n- Open-MSMarco and Jeopardy question generation: beam size 4, with Fast Decoding for RAG-Sequence [c_4].\n- Open-domain QA: greedy decoding, because beam search did not improve results [c_4].\n- The sources give no length penalty for RAG.\n\n**Lost in the Middle**\n- Greedy decoding was used, so there is no beam size or length penalty [c_5].\n\nIf you meant a specific paper, tell me which and I can narrow this down.",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 8
+    },
+    {
+     "marker": "c_2",
+     "doc": "attention",
+     "page": 10
+    },
+    {
+     "marker": "c_4",
+     "doc": "rag",
+     "page": 17
+    },
+    {
+     "marker": "c_5",
+     "doc": "lost_in_the_middle",
+     "page": 4
+    }
+   ],
+   "answer_cost_usd": 0.023026,
+   "answer_tokens": [
+    9163,
+    470
+   ],
+   "judge_cost_usd": 0.040627,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 4,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_5",
+      "supports_claim": true
+     }
+    ],
+    "notes": "Includes the reference facts (beam 4, α=0.6) along with accurately sourced extra detail from the other papers, though the hedging makes it less direct."
+   },
+   "refused": false
+  },
+  {
+   "id": "att-09",
+   "type": "factual",
+   "question": "Why did the authors choose sinusoidal positional encodings over learned positional embeddings?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.952
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0238
+    },
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0213
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0183
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0046
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0039
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0032
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0026
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0022
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0021
+    }
+   ],
+   "gated": false,
+   "top_score": 0.952,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 25,
+    "sparse": 22,
+    "rerank": 282,
+    "retrieve_total": 364,
+    "generation": 5704
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The authors say they chose the sinusoidal version because it may let the model extrapolate to sequence lengths longer than those seen in training [c_1].\n\nThey also hypothesized that the sinusoidal function would make it easy for the model to learn to attend by relative positions, since for any fixed offset k, PE(pos+k) can be written as a linear function of PE(pos) [c_1].\n\nPerformance was not the reason. When they tried learned positional embeddings, the results were nearly identical to the sinusoidal version [c_1]. Table 3 row (E) shows this: 25.7 BLEU with learned embeddings against 25.8 for the base model [c_3].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 6
+    },
+    {
+     "marker": "c_3",
+     "doc": "attention",
+     "page": 9
+    }
+   ],
+   "answer_cost_usd": 0.013352,
+   "answer_tokens": [
+    5611,
+    213
+   ],
+   "judge_cost_usd": 0.028923,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer gives the reference's extrapolation reason, and its extra details (relative-position hypothesis, 25.7 vs 25.8 BLEU) are all supported by the sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "att-10",
+   "type": "factual",
+   "question": "How are the dot products scaled in the Transformer's attention function?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9987
+    },
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9927
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9926
+    },
+    {
+     "doc": "attention",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9589
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.8875
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.3378
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.1392
+    },
+    {
+     "doc": "attention",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0411
+    },
+    {
+     "doc": "attention",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0392
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.036
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9987,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 19,
+    "sparse": 15,
+    "rerank": 229,
+    "retrieve_total": 295,
+    "generation": 7893
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The dot products of the query with all keys are divided by √dk, where dk is the key dimension. A softmax is then applied to get the weights on the values [c_1]. In matrix form: Attention(Q, K, V) = softmax(QKᵀ/√dk)V [c_2].\n\nThe reason given is that for large dk, the dot products grow large in magnitude and push the softmax into regions with extremely small gradients. If the components of q and k are independent random variables with mean 0 and variance 1, their dot product has mean 0 and variance dk. Scaling by 1/√dk counteracts this [c_2].\n\nThe paper notes that dot-product attention is otherwise identical to its algorithm except for this scaling factor. Without scaling, additive attention outperforms dot-product attention for larger values of dk [c_2].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 4
+    },
+    {
+     "marker": "c_2",
+     "doc": "attention",
+     "page": 4
+    }
+   ],
+   "answer_cost_usd": 0.016452,
+   "answer_tokens": [
+    6911,
+    263
+   ],
+   "judge_cost_usd": 0.031159,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly says the dot products are divided by √dk, and all added detail is supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-01",
+   "type": "factual",
+   "question": "How many layers, what hidden size, how many attention heads and how many parameters does BERT-BASE have?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9966
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9698
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9604
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.9219
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.8502
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.72
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.2601
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.2102
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0378
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9966,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 21,
+    "sparse": 27,
+    "rerank": 267,
+    "retrieve_total": 349,
+    "generation": 7170
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.3333333333333333
+   },
+   "answer": "BERT-BASE has 12 layers (Transformer blocks), a hidden size of 768, 12 self-attention heads, and 110M total parameters [c_2]. This is also consistent with Table 6, where the row 12 / 768 / 12 corresponds to this configuration, and with the text stating that BERT-BASE contains 110M parameters [c_1]. The feed-forward/filter size is 4H, i.e., 3072 for H = 768 [c_2].",
+   "citations": [
+    {
+     "marker": "c_2",
+     "doc": "bert",
+     "page": 3
+    },
+    {
+     "marker": "c_1",
+     "doc": "bert",
+     "page": 8
+    }
+   ],
+   "answer_cost_usd": 0.012504,
+   "answer_tokens": [
+    5477,
+    155
+   ],
+   "judge_cost_usd": 0.025375,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer gives the reference's four values (12 layers, hidden size 768, 12 heads, 110M parameters), and every claim is supported by the cited sources, including the correct 3072 feed-forward detail."
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-02",
+   "type": "factual",
+   "question": "What percentage of tokens does BERT mask for the masked language model, and how are the chosen tokens replaced?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.9961
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.979
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9283
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9076
+    },
+    {
+     "doc": "bert",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.8952
+    },
+    {
+     "doc": "bert",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.8816
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.7974
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.7611
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.5793
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.455
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9961,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 24,
+    "sparse": 37,
+    "rerank": 229,
+    "retrieve_total": 321,
+    "generation": 8780
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 0.5,
+    "hit@10": 1.0,
+    "recall@10": 0.5,
+    "rr": 0.5
+   },
+   "answer": "BERT masks 15% of all WordPiece tokens in each sequence at random [c_2]. Each chosen token is then replaced as follows [c_2]:\n\n- **80% of the time:** it is replaced with the [MASK] token.\n- **10% of the time:** it is replaced with a random token.\n- **10% of the time:** it is left unchanged.\n\nThe final hidden vector for each chosen position is used to predict the original token with cross-entropy loss [c_2].\n\nThis mixed strategy reduces the mismatch between pre-training and fine-tuning, since [MASK] never appears during fine-tuning [c_1][c_2]. Keeping the word unchanged biases the representation toward the actual observed word [c_4]. Random replacement affects only 1.5% of all tokens (10% of 15%), which does not seem to harm language understanding [c_4].",
+   "citations": [
+    {
+     "marker": "c_2",
+     "doc": "bert",
+     "page": 4
+    },
+    {
+     "marker": "c_1",
+     "doc": "bert",
+     "page": 16
+    },
+    {
+     "marker": "c_4",
+     "doc": "bert",
+     "page": 12
+    }
+   ],
+   "answer_cost_usd": 0.017288,
+   "answer_tokens": [
+    7254,
+    278
+   ],
+   "judge_cost_usd": 0.033915,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer matches the reference (15% masked, split 80/10/10), and every claim is supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-03",
+   "type": "factual",
+   "question": "Which corpora was BERT pre-trained on and how large are they?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.9736
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.8936
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.8169
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.8089
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.6719
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.6624
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.4847
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.427
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.3988
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.2743
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9736,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 24,
+    "sparse": 28,
+    "rerank": 211,
+    "retrieve_total": 297,
+    "generation": 8067
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 0.0,
+    "recall@5": 0.0,
+    "hit@10": 0.0,
+    "recall@10": 0.0,
+    "rr": 0.0
+   },
+   "answer": "BERT was pre-trained on two corpora: the BooksCorpus (800M words) and Wikipedia (2,500M words) [c_4]. The pre-training procedure describes the combined data as a 3.3 billion word corpus, and 1,000,000 training steps is approximately 40 epochs over it [c_1].\n\nFor comparison, OpenAI GPT was trained only on the BooksCorpus [c_4].",
+   "citations": [
+    {
+     "marker": "c_4",
+     "doc": "bert",
+     "page": 14
+    },
+    {
+     "marker": "c_1",
+     "doc": "bert",
+     "page": 14
+    }
+   ],
+   "answer_cost_usd": 0.020244,
+   "answer_tokens": [
+    9432,
+    138
+   ],
+   "judge_cost_usd": 0.040707,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer names both corpora with the correct sizes, adds the 3.3B-word total and the GPT comparison, and all of it is supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-04",
+   "type": "factual",
+   "question": "What batch size and how many steps were used to pre-train BERT?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.997
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.9937
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.9931
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.9738
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.8302
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.751
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.6821
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.5832
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.5484
+    },
+    {
+     "doc": "bert",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.4775
+    }
+   ],
+   "gated": false,
+   "top_score": 0.997,
+   "timings_ms": {
+    "embed": 23,
+    "dense": 23,
+    "sparse": 33,
+    "rerank": 216,
+    "retrieve_total": 302,
+    "generation": 10048
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "BERT was pre-trained with a batch size of 256 sequences (256 sequences × 512 tokens = 128,000 tokens per batch) for 1,000,000 steps. That is roughly 40 epochs over the 3.3 billion word corpus [c_1]. The comparison with GPT also gives the batch size as 128,000 words and 1M steps [c_3].\n\nTo speed up pre-training, the model used sequence length 128 for 90% of the steps. It then used sequence length 512 for the remaining 10% to learn the positional embeddings [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "bert",
+     "page": 13
+    },
+    {
+     "marker": "c_3",
+     "doc": "bert",
+     "page": 14
+    }
+   ],
+   "answer_cost_usd": 0.019836,
+   "answer_tokens": [
+    8993,
+    185
+   ],
+   "judge_cost_usd": 0.039011,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer matches the reference (256 sequences, 1M steps, ~40 epochs), and every claim is supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-05",
+   "type": "factual",
+   "question": "What GLUE score did BERT achieve?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.9946
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9943
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9846
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.9351
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.7955
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.2724
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0983
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.098
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0937
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0233
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9946,
+   "timings_ms": {
+    "embed": 30,
+    "dense": 24,
+    "sparse": 23,
+    "rerank": 276,
+    "retrieve_total": 360,
+    "generation": 10502
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.5
+   },
+   "answer": "BERT's GLUE score was 80.5, according to the paper's abstract, which describes this as a 7.7-point absolute improvement [c_2]. The GLUE leaderboard comparison in the results section also gives BERT_LARGE a score of 80.5, against 72.8 for OpenAI GPT at the time of writing [c_1].\n\nTable 1 reports a slightly different \"Average\" column, because it excludes the problematic WNLI set and so differs from the official GLUE score. In that table, BERT_LARGE averages 82.1 and BERT_BASE averages 79.6 [c_3].",
+   "citations": [
+    {
+     "marker": "c_2",
+     "doc": "bert",
+     "page": 1
+    },
+    {
+     "marker": "c_1",
+     "doc": "bert",
+     "page": 6
+    },
+    {
+     "marker": "c_3",
+     "doc": "bert",
+     "page": 5
+    }
+   ],
+   "answer_cost_usd": 0.020174,
+   "answer_tokens": [
+    9097,
+    198
+   ],
+   "judge_cost_usd": 0.039619,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer gives the 80.5 GLUE score from the reference, and every claim, including the Table 1 averages and the WNLI caveat, is supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-06",
+   "type": "factual",
+   "question": "What test F1 did BERT reach on SQuAD v1.1?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9971
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.9905
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.9844
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.339
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.3281
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.1399
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.1271
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0407
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0119
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.007
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9971,
+   "timings_ms": {
+    "embed": 29,
+    "dense": 22,
+    "sparse": 23,
+    "rerank": 255,
+    "retrieve_total": 336,
+    "generation": 10508
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "BERT reached a Test F1 of **93.2** on SQuAD v1.1. This is the BERT-LARGE ensemble with TriviaQA fine-tuning, which scored 87.4 EM / 93.2 F1 on the test set [c_2][c_1]. The abstract reports the same figure, a 1.5-point absolute improvement [c_1].\n\nOther test results from Table 2:\n- **BERT-LARGE single model with TriviaQA:** 91.8 test F1 [c_2]. This beats the top leaderboard system by 1.3 F1 as a single system [c_2].\n- **Without TriviaQA fine-tuning data:** F1 drops by only 0.1–0.4 [c_2].\n\nThe table gives no test scores for BERT-BASE, only dev scores (88.5 F1 single) [c_2].",
+   "citations": [
+    {
+     "marker": "c_2",
+     "doc": "bert",
+     "page": 7
+    },
+    {
+     "marker": "c_1",
+     "doc": "bert",
+     "page": 1
+    }
+   ],
+   "answer_cost_usd": 0.018534,
+   "answer_tokens": [
+    7882,
+    277
+   ],
+   "judge_cost_usd": 0.040151,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly gives 93.2 test F1, and every added detail from Table 2 and the abstract is supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-07",
+   "type": "factual",
+   "question": "What vocabulary does BERT use?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9613
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9129
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.902
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.8761
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.8524
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.8015
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.4366
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.3613
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.2829
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.2658
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9613,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 26,
+    "sparse": 24,
+    "rerank": 247,
+    "retrieve_total": 331,
+    "generation": 10433
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "BERT uses WordPiece embeddings (Wu et al., 2016) with a 30,000 token vocabulary [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "bert",
+     "page": 4
+    }
+   ],
+   "answer_cost_usd": 0.011904,
+   "answer_tokens": [
+    5727,
+    45
+   ],
+   "judge_cost_usd": 0.024559,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer matches the reference exactly, WordPiece with a 30,000 token vocabulary, and c_1 states this verbatim."
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-08",
+   "type": "factual",
+   "question": "On how many Cloud TPUs was BERT-BASE trained?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.9386
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.6213
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.5332
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.5208
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.4118
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.3461
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.2838
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.2611
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.2233
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0942
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9386,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 23,
+    "sparse": 27,
+    "rerank": 254,
+    "retrieve_total": 338,
+    "generation": 11135
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "BERT-BASE was trained on 4 Cloud TPUs in Pod configuration, which is 16 TPU chips in total [c_1]. For comparison, BERT-LARGE used 16 Cloud TPUs (64 chips), and each pre-training run took 4 days [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "bert",
+     "page": 13
+    }
+   ],
+   "answer_cost_usd": 0.019524,
+   "answer_tokens": [
+    9272,
+    98
+   ],
+   "judge_cost_usd": 0.039647,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer matches the reference (4 Cloud TPUs, 16 chips), and the extra detail on BERT-LARGE and the 4-day training time is supported by c_1."
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-09",
+   "type": "factual",
+   "question": "Which activation function does BERT use instead of the standard relu?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.2421
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0281
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0272
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.0228
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0147
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0123
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0105
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0092
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0065
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0056
+    }
+   ],
+   "gated": false,
+   "top_score": 0.2421,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 23,
+    "sparse": 31,
+    "rerank": 255,
+    "retrieve_total": 344,
+    "generation": 10910
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.5
+   },
+   "answer": "BERT uses the **gelu** activation function rather than the standard relu, following OpenAI GPT [c_2].",
+   "citations": [
+    {
+     "marker": "c_2",
+     "doc": "bert",
+     "page": 13
+    }
+   ],
+   "answer_cost_usd": 0.01494,
+   "answer_tokens": [
+    7275,
+    39
+   ],
+   "judge_cost_usd": 0.030783,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly identifies gelu, and c_2 explicitly states BERT uses gelu rather than relu, following OpenAI GPT."
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-01",
+   "type": "factual",
+   "question": "What are the two RAG formulations and how do they differ?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.939
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0677
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0562
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0471
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0376
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0224
+    },
+    {
+     "doc": "rag",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0198
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0131
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0114
+    },
+    {
+     "doc": "rag",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0086
+    }
+   ],
+   "gated": false,
+   "top_score": 0.939,
+   "timings_ms": {
+    "embed": 29,
+    "dense": 21,
+    "sparse": 27,
+    "rerank": 256,
+    "retrieve_total": 341,
+    "generation": 13358
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.5
+   },
+   "answer": "The paper compares two RAG formulations: RAG-Sequence and RAG-Token. They differ in how they marginalize over the retrieved latent documents [c_2][c_3].\n\n- **RAG-Sequence** uses the same retrieved document to generate the complete output sequence. It treats the retrieved document as a single latent variable and marginalizes over the top-K documents to get the seq2seq probability p(y|x). The generator produces the full output sequence probability for each document, and these are then combined [c_2].\n- **RAG-Token** can draw a different latent document for each target token and marginalize accordingly. This lets the generator choose content from several documents when producing an answer [c_3]. For each token, the generator produces a next-token distribution for each document, marginalizes, and repeats for the next token [c_3].\n\nThey also differ in decoding. RAG-Token can be plugged into a standard beam decoder as an autoregressive seq2seq model. RAG-Sequence's likelihood doesn't break into per-token likelihoods, so it needs beam search for each document, via \"Thorough Decoding\" or the cheaper \"Fast Decoding\" approximation [c_3].\n\nFor sequence classification, where the target is a sequence of length one, the two models are equivalent [c_3].",
+   "citations": [
+    {
+     "marker": "c_2",
+     "doc": "rag",
+     "page": 3
+    },
+    {
+     "marker": "c_3",
+     "doc": "rag",
+     "page": 3
+    }
+   ],
+   "answer_cost_usd": 0.022502,
+   "answer_tokens": [
+    9196,
+    411
+   ],
+   "judge_cost_usd": 0.040755,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly names RAG-Sequence and RAG-Token, matching the reference, and its extra detail on marginalization, decoding and classification equivalence is all supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-02",
+   "type": "factual",
+   "question": "Which retriever does RAG use?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9962
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.9962
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9928
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.987
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9784
+    },
+    {
+     "doc": "rag",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9754
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.822
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.6411
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.5935
+    },
+    {
+     "doc": "rag",
+     "p0": 19,
+     "p1": 19,
+     "score": 0.5758
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9962,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 21,
+    "sparse": 20,
+    "rerank": 245,
+    "retrieve_total": 320,
+    "generation": 13600
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.3333333333333333
+   },
+   "answer": "RAG uses the Dense Passage Retriever (DPR) as its retriever [c_3]. DPR has a bi-encoder architecture. A BERT-base document encoder produces d(z) and a BERT-base query encoder produces q(x). The retrieval probability is proportional to exp(d(z)ᵀq(x)) [c_4].\n\n- **Search:** Finding the top-k documents is a Maximum Inner Product Search (MIPS) problem, which can be solved approximately in sub-linear time [c_4].\n- **Initialization:** A pre-trained DPR bi-encoder initializes the retriever and builds the document index. That bi-encoder was trained to retrieve documents containing answers to TriviaQA and Natural Questions questions [c_4].\n- **Training:** The document encoder and index stay fixed. Only the query encoder (BERTq) and the BART generator are fine-tuned [c_4].\n- **Ablation:** Swapping in a fixed BM25 retriever gave the best FEVER results. Learned dense retrieval was better on the other tasks, and especially important for open-domain QA [c_2].",
+   "citations": [
+    {
+     "marker": "c_3",
+     "doc": "rag",
+     "page": 2
+    },
+    {
+     "marker": "c_4",
+     "doc": "rag",
+     "page": 3
+    },
+    {
+     "marker": "c_2",
+     "doc": "rag",
+     "page": 7
+    }
+   ],
+   "answer_cost_usd": 0.02211,
+   "answer_tokens": [
+    9190,
+    373
+   ],
+   "judge_cost_usd": 0.041575,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly identifies DPR as the retriever, and every extra detail it adds is supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-03",
+   "type": "factual",
+   "question": "How was the Wikipedia knowledge source prepared for RAG?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9854
+    },
+    {
+     "doc": "rag",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.8934
+    },
+    {
+     "doc": "rag",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.7876
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.4642
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.3785
+    },
+    {
+     "doc": "rag",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.3758
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.3512
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.1853
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.1604
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.1417
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9854,
+   "timings_ms": {
+    "embed": 22,
+    "dense": 18,
+    "sparse": 18,
+    "rerank": 253,
+    "retrieve_total": 318,
+    "generation": 12826
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The paper used a single Wikipedia dump as the non-parametric knowledge source, specifically the December 2018 dump, following Lee et al. and Karpukhin et al. [c_1]. The preparation steps were:\n\n- **Chunking:** Each article was split into disjoint 100-word chunks, giving about 21M documents [c_1].\n- **Embedding:** The document encoder computed an embedding for each document [c_1].\n- **Indexing:** A single MIPS index was built with FAISS, using a Hierarchical Navigable Small World approximation for fast retrieval [c_1].\n- **Retrieval at training time:** The top k documents were retrieved for each query, with k ∈ {5, 10} for training. The test-time k was set using dev data [c_1].\n\nThe retriever is a pre-trained DPR, and the index is described as a dense vector index of Wikipedia [c_3][c_4].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "rag",
+     "page": 4
+    },
+    {
+     "marker": "c_3",
+     "doc": "rag",
+     "page": 1
+    },
+    {
+     "marker": "c_4",
+     "doc": "rag",
+     "page": 2
+    }
+   ],
+   "answer_cost_usd": 0.020772,
+   "answer_tokens": [
+    8906,
+    296
+   ],
+   "judge_cost_usd": 0.041171,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer gives the December 2018 dump, the disjoint 100-word chunks and the 21M documents, and every added detail is supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-04",
+   "type": "factual",
+   "question": "Which library and approximation does RAG use to build its document index?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9847
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9157
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.8938
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.8366
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.7798
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.6279
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.3983
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.3824
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.3702
+    },
+    {
+     "doc": "rag",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.1483
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9847,
+   "timings_ms": {
+    "embed": 27,
+    "dense": 23,
+    "sparse": 32,
+    "rerank": 281,
+    "retrieve_total": 369,
+    "generation": 12454
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "RAG builds a single MIPS (Maximum Inner Product Search) index with the **FAISS** library, using a **Hierarchical Navigable Small World (HNSW)** approximation for fast retrieval [c_1]. The index covers about 21M Wikipedia documents (disjoint 100-word chunks from the December 2018 dump), each embedded by the document encoder [c_1].\n\nThe paper also notes that finding the top-k documents is a MIPS problem, which can be solved approximately in sub-linear time [c_4].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "rag",
+     "page": 4
+    },
+    {
+     "marker": "c_4",
+     "doc": "rag",
+     "page": 4
+    }
+   ],
+   "answer_cost_usd": 0.016192,
+   "answer_tokens": [
+    7226,
+    174
+   ],
+   "judge_cost_usd": 0.031731,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly identifies FAISS with an HNSW approximation, and its extra details are supported by the sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-05",
+   "type": "factual",
+   "question": "What exact match score did RAG-Sequence reach on Natural Questions?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9512
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.8844
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.8065
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.698
+    },
+    {
+     "doc": "rag",
+     "p0": 19,
+     "p1": 19,
+     "score": 0.6608
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.5883
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.5612
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.3935
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.2704
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.2636
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9512,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 23,
+    "sparse": 31,
+    "rerank": 256,
+    "retrieve_total": 346,
+    "generation": 13410
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.3333333333333333
+   },
+   "answer": "RAG-Sequence reached **44.5 exact match** on Natural Questions on the test set (Table 1) [c_2]. The appendix repeats this figure when comparing it with T5-large's 28.9 EM [c_4].\n\nOn the dev set, the ablation table (Table 6) lists RAG-Sequence at 44.0 EM on NQ [c_1].",
+   "citations": [
+    {
+     "marker": "c_2",
+     "doc": "rag",
+     "page": 6
+    },
+    {
+     "marker": "c_4",
+     "doc": "rag",
+     "page": 19
+    },
+    {
+     "marker": "c_1",
+     "doc": "rag",
+     "page": 8
+    }
+   ],
+   "answer_cost_usd": 0.016358,
+   "answer_tokens": [
+    7569,
+    122
+   ],
+   "judge_cost_usd": 0.032979,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer gives the 44.5 test EM matching the reference, and its added dev-set figure of 44.0 is supported by Table 6."
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-06",
+   "type": "factual",
+   "question": "What did the index hot-swapping experiment show about mismatched document indices?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.849
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.019
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.0115
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0005
+    },
+    {
+     "doc": "rag",
+     "p0": 19,
+     "p1": 19,
+     "score": 0.0003
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0003
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0003
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0002
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0002
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.0002
+    }
+   ],
+   "gated": false,
+   "top_score": 0.849,
+   "timings_ms": {
+    "embed": 30,
+    "dense": 25,
+    "sparse": 31,
+    "rerank": 276,
+    "retrieve_total": 371,
+    "generation": 14730
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.5
+   },
+   "answer": "The index hot-swapping experiment showed that RAG's accuracy drops sharply when the index doesn't match the time period of the questions.\n\n- **Setup:** The authors compared an index built from the December 2016 DrQA Wikipedia dump with the December 2018 index from their main results. They prepared 82 world leaders who changed between those dates and queried the NQ RAG model with the template \"Who is {position}?\" [c_1].\n- **Matched indices:** RAG answered 70% correctly using the 2016 index for 2016 leaders, and 68% using the 2018 index for 2018 leaders [c_1].\n- **Mismatched indices:** Accuracy was low, at 12% with the 2018 index and 2016 leaders, and 4% with the 2016 index and 2018 leaders [c_1].\n- **Conclusion:** The authors say this shows RAG's world knowledge can be updated simply by replacing its non-parametric memory. They contrast this with parametric-only models like T5 or BART, which need further training to update their behavior [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "rag",
+     "page": 7
+    }
+   ],
+   "answer_cost_usd": 0.024306,
+   "answer_tokens": [
+    10433,
+    344
+   ],
+   "judge_cost_usd": 0.046203,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer accurately reports the matched (70%/68%) and mismatched (12%/4%) accuracies and the knowledge-update conclusion, all supported by c_1."
+   },
+   "refused": false
+  },
+  {
+   "id": "lim-01",
+   "type": "factual",
+   "question": "What shape of performance curve do the authors observe as the position of relevant information changes?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.998
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9869
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.977
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9557
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9531
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9257
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.8689
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.8208
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.7626
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.751
+    }
+   ],
+   "gated": false,
+   "top_score": 0.998,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 24,
+    "sparse": 34,
+    "rerank": 215,
+    "retrieve_total": 306,
+    "generation": 15438
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The authors observe a **U-shaped performance curve**. Models perform best when the relevant information is at the very beginning (primacy bias) or the very end (recency bias) of the input context. Performance drops significantly when the information is in the middle [c_1][c_2][c_3].\n\nSome details from the sources:\n- For GPT-3.5-Turbo, multi-document QA performance can drop by more than 20% depending on position. In the worst case (20- and 30-document settings), it falls below closed-book performance of 56.1% [c_3].\n- The curve also appears in the synthetic key-value retrieval task for some models [c_1].\n- It appears even in base models without instruction fine-tuning, such as MPT-30B [c_4].\n- Extended-context models show nearly identical position-dependent performance to their non-extended counterparts when the input fits in both context windows [c_3].\n- Encoder-decoder models are relatively robust to position within their training-time sequence length, but show a U-shaped curve on longer sequences [c_1].\n- In Llama-2 models, the 13B and 70B versions show the U-shape, while the 7B models are solely recency biased [c_4].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "lost_in_the_middle",
+     "page": 2
+    },
+    {
+     "marker": "c_2",
+     "doc": "lost_in_the_middle",
+     "page": 1
+    },
+    {
+     "marker": "c_3",
+     "doc": "lost_in_the_middle",
+     "page": 5
+    },
+    {
+     "marker": "c_4",
+     "doc": "lost_in_the_middle",
+     "page": 9
+    }
+   ],
+   "answer_cost_usd": 0.016384,
+   "answer_tokens": [
+    6302,
+    378
+   ],
+   "judge_cost_usd": 0.029275,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly identifies the U-shaped curve, and every extra detail is supported by its cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "lim-02",
+   "type": "factual",
+   "question": "Which language models did the authors evaluate?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 11,
+     "p1": 11,
+     "score": 0.9657
+    },
+    {
+     "doc": "bert",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.9199
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.8329
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.8179
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.6989
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.6784
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.5962
+    },
+    {
+     "doc": "rag",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.5702
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.5174
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.4856
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9657,
+   "timings_ms": {
+    "embed": 24,
+    "dense": 27,
+    "sparse": 24,
+    "rerank": 250,
+    "retrieve_total": 332,
+    "generation": 17007
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.3333333333333333
+   },
+   "answer": "The authors evaluated these models (from the \"Lost in the Middle\" paper):\n\n- **Open models:** MPT-30B-Instruct and LongChat-13B (16K) [c_3].\n- **Closed models:** OpenAI's GPT-3.5-Turbo and Anthropic's Claude-1.3 [c_3]. The figures also show the variants gpt-3.5-turbo-0613, gpt-3.5-turbo-16k-0613, and claude-1.3-100k [c_4, c_3].\n- **Encoder-decoder models:** Flan-T5-XXL and Flan-UL2, used to compare architectures, since the open models above are all decoder-only [c_4].",
+   "citations": [
+    {
+     "marker": "c_3",
+     "doc": "lost_in_the_middle",
+     "page": 2
+    },
+    {
+     "marker": "c_4",
+     "doc": "lost_in_the_middle",
+     "page": 7
+    }
+   ],
+   "answer_cost_usd": 0.022192,
+   "answer_tokens": [
+    9026,
+    414
+   ],
+   "judge_cost_usd": 0.048775,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": false
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer matches all four reference models and adds supported detail on variants and Flan models; in the variants claim, c_3 shows only gpt-3.5-turbo-0613, while c_4 supports the full list."
+   },
+   "refused": false
+  },
+  {
+   "id": "lim-03",
+   "type": "factual",
+   "question": "Which dataset is used for the multi-document question answering task?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9977
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9951
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9925
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.9895
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.9848
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.9787
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.9718
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9369
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.8854
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.8497
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9977,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 26,
+    "sparse": 33,
+    "rerank": 227,
+    "retrieve_total": 321,
+    "generation": 16610
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The multi-document question answering task uses data from NaturalQuestions-Open (Lee et al., 2019; Kwiatkowski et al., 2019). This dataset contains historical queries issued to the Google search engine, paired with human-annotated answers extracted from Wikipedia [c_1].\n\nDetails of how it is used:\n- The authors take the 2655 queries whose annotated long answer is a paragraph, rather than a list or a table [c_1].\n- The document containing the answer is the Wikipedia paragraph from the NaturalQuestions annotations [c_1].\n- Distractor documents are Wikipedia chunks of at most 100 tokens. They are retrieved with Contriever (fine-tuned on MS-MARCO) and do not contain any of the annotated answers [c_1].\n\nThe sources also describe a separate synthetic key-value retrieval task. It uses randomly generated UUIDs rather than a natural dataset [c_5].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "lost_in_the_middle",
+     "page": 3
+    },
+    {
+     "marker": "c_5",
+     "doc": "lost_in_the_middle",
+     "page": 6
+    }
+   ],
+   "answer_cost_usd": 0.020116,
+   "answer_tokens": [
+    8513,
+    309
+   ],
+   "judge_cost_usd": 0.038135,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_5",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly names NaturalQuestions-Open, and every added detail is supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "lim-04",
+   "type": "factual",
+   "question": "How does GPT-3.5-Turbo's multi-document accuracy compare with its closed-book accuracy?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.997
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9945
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9859
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.9788
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.9732
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9659
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.9528
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.9469
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.941
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.9264
+    }
+   ],
+   "gated": false,
+   "top_score": 0.997,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 26,
+    "sparse": 30,
+    "rerank": 300,
+    "retrieve_total": 392,
+    "generation": 18410
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 0.0,
+    "recall@5": 0.0,
+    "hit@10": 0.0,
+    "recall@10": 0.0,
+    "rr": 0.0
+   },
+   "answer": "GPT-3.5-Turbo's multi-document accuracy depends on where the answer document sits in the context, so it can be above or below its closed-book accuracy.\n\n- **Closed-book baseline:** With no documents in the input, GPT-3.5-Turbo scores 56.1% [c_1].\n- **Oracle setting:** When given only the document containing the answer, it scores 88.3% [c_1].\n- **Answer at the start or end of the context:** Accuracy is highest in these positions [c_1].\n- **Answer in the middle of the context:** Accuracy can drop by more than 20%. In the worst case, performance in the 20- and 30-document settings falls below the 56.1% closed-book level [c_1].\n\nSo adding documents helps when the relevant one is near the start or end, but can hurt compared with no documents when it is in the middle. The authors take this as evidence that current models cannot effectively reason over their entire context window [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "lost_in_the_middle",
+     "page": 5
+    }
+   ],
+   "answer_cost_usd": 0.015878,
+   "answer_tokens": [
+    5319,
+    524
+   ],
+   "judge_cost_usd": 0.025751,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer matches the reference: in the worst positions, multi-document accuracy falls below the 56.1% closed-book level, and every claim is supported by c_1."
+   },
+   "refused": false
+  },
+  {
+   "id": "lim-05",
+   "type": "factual",
+   "question": "Which retriever is used in the retriever-reader case study?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9477
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9407
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.5128
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 11,
+     "p1": 11,
+     "score": 0.2846
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.1954
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.184
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.1537
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.1124
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0894
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0477
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9477,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 24,
+    "sparse": 28,
+    "rerank": 272,
+    "retrieve_total": 358,
+    "generation": 18565
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.5
+   },
+   "answer": "The retriever-reader case study in \"Lost in the Middle\" uses Contriever, fine-tuned on MS-MARCO. It takes a NaturalQuestions-Open query and returns the k Wikipedia documents with the highest relevance scores, and these are included in the language model's prompt [c_2].\n\nThe same Contriever system was also used in the multi-document QA setup to retrieve distractor documents [c_1].",
+   "citations": [
+    {
+     "marker": "c_2",
+     "doc": "lost_in_the_middle",
+     "page": 9
+    },
+    {
+     "marker": "c_1",
+     "doc": "lost_in_the_middle",
+     "page": 3
+    }
+   ],
+   "answer_cost_usd": 0.01951,
+   "answer_tokens": [
+    9075,
+    136
+   ],
+   "judge_cost_usd": 0.038643,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly names Contriever fine-tuned on MS-MARCO, and both citations support the claims they are attached to."
+   },
+   "refused": false
+  },
+  {
+   "id": "mh-01",
+   "type": "multi_hop",
+   "question": "How many layers does the Transformer's encoder have and what output dimension do its sub-layers and embeddings produce?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9964
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9749
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.8762
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.7994
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.7024
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.4958
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.4854
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.3583
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0796
+    },
+    {
+     "doc": "attention",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0407
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9964,
+   "timings_ms": {
+    "embed": 29,
+    "dense": 24,
+    "sparse": 34,
+    "rerank": 308,
+    "retrieve_total": 402,
+    "generation": 17506
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The Transformer's encoder is a stack of N = 6 identical layers, each with two sub-layers: a multi-head self-attention mechanism and a position-wise fully connected feed-forward network [c_1]. All sub-layers in the model, as well as the embedding layers, produce outputs of dimension dmodel = 512. This makes the residual connections around each sub-layer possible [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 3
+    }
+   ],
+   "answer_cost_usd": 0.016064,
+   "answer_tokens": [
+    7387,
+    129
+   ],
+   "judge_cost_usd": 0.031775,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly states N = 6 layers and dmodel = 512, and every claim is directly supported by c_1."
+   },
+   "refused": false
+  },
+  {
+   "id": "mh-02",
+   "type": "multi_hop",
+   "question": "By how many parameters does BERT-LARGE exceed BERT-BASE, and how many layers does each have?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.9901
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9765
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9672
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9187
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.8321
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.7936
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.5755
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.1687
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0802
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.061
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9901,
+   "timings_ms": {
+    "embed": 14,
+    "dense": 18,
+    "sparse": 16,
+    "rerank": 262,
+    "retrieve_total": 315,
+    "generation": 18242
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.3333333333333333
+   },
+   "answer": "BERT-LARGE has 340M parameters and BERT-BASE has 110M, so BERT-LARGE exceeds BERT-BASE by about 230M parameters (340M − 110M) [c_3].\n\n- **BERT-BASE:** 12 layers (L=12), with H=768 and A=12 [c_3].\n- **BERT-LARGE:** 24 layers (L=24), with H=1024 and A=16 [c_3].\n\nThe same figures appear in the paper's discussion of model size, which gives 110M for BERT-BASE and 340M for BERT-LARGE [c_2].",
+   "citations": [
+    {
+     "marker": "c_3",
+     "doc": "bert",
+     "page": 3
+    },
+    {
+     "marker": "c_2",
+     "doc": "bert",
+     "page": 8
+    }
+   ],
+   "answer_cost_usd": 0.017104,
+   "answer_tokens": [
+    7562,
+    198
+   ],
+   "judge_cost_usd": 0.033899,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer matches the reference: 230M more parameters (340M vs 110M), with 24 and 12 layers, and every claim is supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "mh-03",
+   "type": "multi_hop",
+   "question": "How many times more training steps did the Transformer big models get than the base models?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9896
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9091
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.8718
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.6436
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.4641
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.4501
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.2054
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.1379
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.1371
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.073
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9896,
+   "timings_ms": {
+    "embed": 20,
+    "dense": 21,
+    "sparse": 27,
+    "rerank": 270,
+    "retrieve_total": 344,
+    "generation": 19644
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.2
+   },
+   "answer": "The big models were trained for 300,000 steps, while the base models were trained for 100,000 steps [c_1]. That makes it **3 times** as many training steps for the big models.\n\nThe big models' steps were also slower: about 1.0 seconds per step versus about 0.4 seconds for the base models [c_1]. Their total training time was 3.5 days versus 12 hours for the base models [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 8
+    }
+   ],
+   "answer_cost_usd": 0.013668,
+   "answer_tokens": [
+    6189,
+    129
+   ],
+   "judge_cost_usd": 0.027595,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly gives 3x (300K vs 100K steps), and every added detail on step time and training duration is supported by c_1."
+   },
+   "refused": false
+  },
+  {
+   "id": "mh-04",
+   "type": "multi_hop",
+   "question": "How much CPU memory does the RAG document index need, and how much after compression?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.9407
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0534
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.0148
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0101
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0065
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0061
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0045
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0009
+    },
+    {
+     "doc": "rag",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.0008
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0003
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9407,
+   "timings_ms": {
+    "embed": 24,
+    "dense": 26,
+    "sparse": 27,
+    "rerank": 278,
+    "retrieve_total": 362,
+    "generation": 19156
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The RAG document index needs about 100 GB of CPU memory for all of Wikipedia. After compression with FAISS's compression tools, the requirement drops to 36 GB [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "rag",
+     "page": 17
+    }
+   ],
+   "answer_cost_usd": 0.018216,
+   "answer_tokens": [
+    8793,
+    63
+   ],
+   "judge_cost_usd": 0.036899,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer matches the reference (about 100 GB, falling to 36 GB after FAISS compression), and both figures are stated in c_1."
+   },
+   "refused": false
+  },
+  {
+   "id": "tab-01",
+   "type": "table",
+   "question": "What BLEU scores did the Transformer base and big models get on English-German and English-French?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9998
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.999
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9856
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.8323
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.4706
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.3733
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0866
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0665
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0257
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0123
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9998,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 24,
+    "sparse": 36,
+    "rerank": 285,
+    "retrieve_total": 376,
+    "generation": 22576
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "On newstest2014, Table 2 reports these BLEU scores [c_1]:\n\n| Model | English-German | English-French |\n|---|---|---|\n| Transformer (base) | 27.3 | 38.1 |\n| Transformer (big) | 28.4 | 41.8 |\n\n- The abstract also gives 28.4 for English-German and 41.8 for English-French [c_3].\n- The Results text in Section 6.1 says the big model reached 41.0 on English-French, which conflicts with the 41.8 in Table 2 and the abstract [c_1]. The sources don't explain the discrepancy.\n- Table 3 lists different numbers, 25.8 for base and 26.4 for big on English-German. Those are on the newstest2013 development set, not the test set [c_2].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 8
+    },
+    {
+     "marker": "c_3",
+     "doc": "attention",
+     "page": 1
+    },
+    {
+     "marker": "c_2",
+     "doc": "attention",
+     "page": 9
+    }
+   ],
+   "answer_cost_usd": 0.015424,
+   "answer_tokens": [
+    5692,
+    404
+   ],
+   "judge_cost_usd": 0.026743,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer matches the reference for all four scores, and its extra notes on the 41.0 discrepancy and the Table 3 dev-set scores are accurate and supported."
+   },
+   "refused": false
+  },
+  {
+   "id": "tab-02",
+   "type": "table",
+   "question": "How many parameters (in millions) does the big Transformer have in the model variations table?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9094
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.8717
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.7909
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.6762
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.3061
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.2113
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0999
+    },
+    {
+     "doc": "rag",
+     "p0": 19,
+     "p1": 19,
+     "score": 0.0765
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.0578
+    },
+    {
+     "doc": "rag",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0217
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9094,
+   "timings_ms": {
+    "embed": 21,
+    "dense": 21,
+    "sparse": 26,
+    "rerank": 276,
+    "retrieve_total": 349,
+    "generation": 20090
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "According to Table 3 (model variations) in \"Attention Is All You Need,\" the big Transformer has 213 million parameters (the params ×10⁶ column), compared with 65 million for the base model [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 9
+    }
+   ],
+   "answer_cost_usd": 0.015784,
+   "answer_tokens": [
+    7552,
+    68
+   ],
+   "judge_cost_usd": 0.031715,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer gives 213M for the big model and 65M for the base model, both supported by Table 3 in c_1."
+   },
+   "refused": false
+  },
+  {
+   "id": "tab-03",
+   "type": "table",
+   "question": "What accuracy did BERT-LARGE get on the SWAG test set?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.9642
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9309
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.8838
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.8689
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.7849
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.6157
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.5988
+    },
+    {
+     "doc": "bert",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.4013
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.2775
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.1731
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9642,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 24,
+    "sparse": 26,
+    "rerank": 258,
+    "retrieve_total": 340,
+    "generation": 21138
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 0.0,
+    "recall@5": 0.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.14285714285714285
+   },
+   "answer": "The provided sources don't report BERT-LARGE's accuracy on the SWAG test set. They cover GLUE, SQuAD v1.1 and v2.0, CoNLL-2003 NER, and ablation studies, but none of the excerpts include SWAG results.\n\nThe abstract does say BERT obtains new state-of-the-art results on eleven NLP tasks [c_3]. The excerpts give no SWAG figure, though. For BERT-LARGE, the sources do report GLUE test results (for example, 86.7/85.9 on MNLI-m/mm and an average of 82.1) [c_5], and SQuAD v1.1 and v2.0 results [c_1].",
+   "citations": [
+    {
+     "marker": "c_3",
+     "doc": "bert",
+     "page": 1
+    },
+    {
+     "marker": "c_5",
+     "doc": "bert",
+     "page": 6
+    },
+    {
+     "marker": "c_1",
+     "doc": "bert",
+     "page": 6
+    }
+   ],
+   "answer_cost_usd": 0.020464,
+   "answer_tokens": [
+    9107,
+    225
+   ],
+   "judge_cost_usd": 0.044123,
+   "judge": {
+    "refused": true,
+    "faithfulness": 1.0,
+    "correctness": "incorrect",
+    "relevance": 2,
+    "citations": [
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_5",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer accurately says the sources lack SWAG results and so gives no figure, while the reference answer is 86.3; the cited GLUE and SQuAD details are supported."
+   },
+   "refused": true
+  },
+  {
+   "id": "tab-04",
+   "type": "table",
+   "question": "What F1 score did the 4-layer Transformer get on WSJ-only discriminative parsing?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.9969
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.9633
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.7668
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.1419
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.1168
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0382
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0318
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0147
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0144
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0026
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9969,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 24,
+    "sparse": 27,
+    "rerank": 280,
+    "retrieve_total": 363,
+    "generation": 22753
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "The 4-layer Transformer scored 91.3 F1 on Section 23 of the WSJ when trained on WSJ only (discriminative) [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 10
+    }
+   ],
+   "answer_cost_usd": 0.017106,
+   "answer_tokens": [
+    8283,
+    54
+   ],
+   "judge_cost_usd": 0.034683,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer gives 91.3 F1 on WSJ Section 23, matching Table 4 in c_1 and the reference."
+   },
+   "refused": false
+  },
+  {
+   "id": "cmp-01",
+   "type": "comparison",
+   "question": "Which model has more parameters, BERT-LARGE or the big Transformer from the translation paper?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9848
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.9494
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9472
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9414
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9369
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.7818
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.7031
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.5723
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.3845
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.3399
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9848,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 17,
+    "sparse": 21,
+    "rerank": 271,
+    "retrieve_total": 341,
+    "generation": 25962
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 0.5,
+    "hit@10": 1.0,
+    "recall@10": 0.5,
+    "rr": 1.0
+   },
+   "answer": "**BERT-LARGE has more parameters**, though the sources don't state the big Transformer's parameter count directly.\n\n- BERT-LARGE (L=24, H=1024, A=16) has 340M parameters [c_1, c_4].\n- The BERT paper says the largest Transformer explored in Vaswani et al. (2017) is (L=6, H=1024, A=16) with 100M parameters for the encoder [c_4]. This is probably the \"big\" model, but the translation paper excerpt doesn't list that configuration, since Table 3 isn't included [c_3]. The 100M figure also covers only the encoder.\n\nOn that basis, BERT-LARGE's 340M is well above the roughly 100M cited for the largest Transformer in the translation paper [c_4].",
+   "citations": [
+    {
+     "marker": "c_4",
+     "doc": "bert",
+     "page": 8
+    },
+    {
+     "marker": "c_3",
+     "doc": "attention",
+     "page": 8
+    }
+   ],
+   "answer_cost_usd": 0.020732,
+   "answer_tokens": [
+    7336,
+    606
+   ],
+   "judge_cost_usd": 0.042015,
+   "judge": {
+    "refused": false,
+    "faithfulness": 0.9,
+    "correctness": "partial",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly says BERT-LARGE (340M) has more, but omits the big Transformer's 213M total and closes by implying roughly 100M, which is only the encoder."
+   },
+   "refused": false
+  },
+  {
+   "id": "cmp-02",
+   "type": "comparison",
+   "question": "How many attention heads does BERT-BASE have compared with the base Transformer?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9758
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.8927
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.239
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.1396
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.1187
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0952
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0761
+    },
+    {
+     "doc": "attention",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0389
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0125
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0124
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9758,
+   "timings_ms": {
+    "embed": 23,
+    "dense": 21,
+    "sparse": 28,
+    "rerank": 206,
+    "retrieve_total": 285,
+    "generation": 25366
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 0.5,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "BERT-BASE has 12 self-attention heads (L=12, H=768, A=12, 110M parameters) [c_1].\n\nThe sources don't give the head count for the base Transformer from Vaswani et al. (2017), so I can't make that comparison directly. They only mention the largest Transformer explored in that paper, which is L=6, H=1024, A=16 with 100M encoder parameters [c_2]. That is not the base configuration.",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "bert",
+     "page": 3
+    },
+    {
+     "marker": "c_2",
+     "doc": "bert",
+     "page": 8
+    }
+   ],
+   "answer_cost_usd": 0.021818,
+   "answer_tokens": [
+    9459,
+    290
+   ],
+   "judge_cost_usd": 0.043767,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "partial",
+    "relevance": 4,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly gives BERT-BASE's 12 heads but does not state the base Transformer's 8 heads, which the sources do not contain, so the comparison is incomplete."
+   },
+   "refused": false
+  },
+  {
+   "id": "cmp-03",
+   "type": "comparison",
+   "question": "RAG's DPR retriever is built on BERT-base. How many parameters do its encoders have, and how does that compare with BERT-BASE's stated size?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.9978
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9491
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9059
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.7229
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.6589
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.6434
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.5814
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.5668
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.5268
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.4128
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9978,
+   "timings_ms": {
+    "embed": 29,
+    "dense": 24,
+    "sparse": 40,
+    "rerank": 276,
+    "retrieve_total": 376,
+    "generation": 25362
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 0.5,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 1.0
+   },
+   "answer": "RAG's retriever uses BERT-base for both its query encoder and document encoder, and each has 110M parameters [c_1]. The sources describe both encoders as based on BERT-BASE [c_2]. The BERT paper states that BERT-BASE contains 110M parameters [c_3].\n\nSo each RAG encoder matches BERT-BASE's stated size. Together, the two encoders account for about 220M parameters. However, RAG does not train the document encoder, which stays fixed along with the index. Only the query encoder and the BART generator are fine-tuned [c_1][c_2].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "rag",
+     "page": 18
+    },
+    {
+     "marker": "c_2",
+     "doc": "rag",
+     "page": 3
+    },
+    {
+     "marker": "c_3",
+     "doc": "bert",
+     "page": 8
+    }
+   ],
+   "answer_cost_usd": 0.016814,
+   "answer_tokens": [
+    7447,
+    192
+   ],
+   "judge_cost_usd": 0.039415,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly gives 110M parameters per DPR encoder, matching BERT-BASE's stated 110M; every claim is supported, and c_1 backs the untrained document encoder point while c_2 covers the fine-tuning details."
+   },
+   "refused": false
+  },
+  {
+   "id": "una-01",
+   "type": "unanswerable",
+   "question": "What is the capital of Mongolia?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.0
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 28,
+    "sparse": 5,
+    "rerank": 233,
+    "retrieve_total": 298,
+    "generation": 23872
+   },
+   "degraded": [],
+   "answer": "Your documents don't seem to cover this question, so I won't guess.",
+   "citations": [],
+   "answer_cost_usd": 0.0,
+   "answer_tokens": [
+    0,
+    0
+   ],
+   "refused": true,
+   "judge": null
+  },
+  {
+   "id": "una-02",
+   "type": "unanswerable",
+   "question": "Who wrote the novel Pride and Prejudice?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0005
+    },
+    {
+     "doc": "rag",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.0003
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0002
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0001
+    },
+    {
+     "doc": "rag",
+     "p0": 11,
+     "p1": 11,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.0
+    },
+    {
+     "doc": "attention",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 11,
+     "p1": 11,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 11,
+     "p1": 11,
+     "score": 0.0
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0005,
+   "timings_ms": {
+    "embed": 24,
+    "dense": 22,
+    "sparse": 8,
+    "rerank": 246,
+    "retrieve_total": 307,
+    "generation": 23565
+   },
+   "degraded": [],
+   "answer": "Your documents don't seem to cover this question, so I won't guess.",
+   "citations": [],
+   "answer_cost_usd": 0.0,
+   "answer_tokens": [
+    0,
+    0
+   ],
+   "refused": true,
+   "judge": null
+  },
+  {
+   "id": "una-03",
+   "type": "unanswerable",
+   "question": "How do I bake sourdough bread at home?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 28,
+    "sparse": 6,
+    "rerank": 313,
+    "retrieve_total": 377,
+    "generation": 24006
+   },
+   "degraded": [],
+   "answer": "Your documents don't seem to cover this question, so I won't guess.",
+   "citations": [],
+   "answer_cost_usd": 0.0,
+   "answer_tokens": [
+    0,
+    0
+   ],
+   "refused": true,
+   "judge": null
+  },
+  {
+   "id": "una-04",
+   "type": "unanswerable",
+   "question": "Explain the rules of castling in chess.",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 26,
+    "sparse": 5,
+    "rerank": 249,
+    "retrieve_total": 311,
+    "generation": 23694
+   },
+   "degraded": [],
+   "answer": "Your documents don't seem to cover this question, so I won't guess.",
+   "citations": [],
+   "answer_cost_usd": 0.0,
+   "answer_tokens": [
+    0,
+    0
+   ],
+   "refused": true,
+   "judge": null
+  },
+  {
+   "id": "una-05",
+   "type": "unanswerable",
+   "question": "What is the boiling point of tungsten in degrees Celsius?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0
+    },
+    {
+     "doc": "attention",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.0
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 26,
+    "sparse": 13,
+    "rerank": 311,
+    "retrieve_total": 381,
+    "generation": 23623
+   },
+   "degraded": [],
+   "answer": "Your documents don't seem to cover this question, so I won't guess.",
+   "citations": [],
+   "answer_cost_usd": 0.0,
+   "answer_tokens": [
+    0,
+    0
+   ],
+   "refused": true,
+   "judge": null
+  },
+  {
+   "id": "una-06",
+   "type": "unanswerable",
+   "question": "What was the carbon footprint, in kilograms of CO2, of training the Transformer?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0043
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0023
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0017
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0011
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0011
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0004
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0003
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.0002
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0002
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0001
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0043,
+   "timings_ms": {
+    "embed": 28,
+    "dense": 23,
+    "sparse": 24,
+    "rerank": 278,
+    "retrieve_total": 360,
+    "generation": 23325
+   },
+   "degraded": [],
+   "answer": "Your documents don't seem to cover this question, so I won't guess.",
+   "citations": [],
+   "answer_cost_usd": 0.0,
+   "answer_tokens": [
+    0,
+    0
+   ],
+   "refused": true,
+   "judge": null
+  },
+  {
+   "id": "una-07",
+   "type": "unanswerable",
+   "question": "How many parameters does GPT-4 have?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9672
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.9169
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 15,
+     "p1": 15,
+     "score": 0.9163
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.8182
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.6054
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.4256
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.3596
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.2702
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.2009
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.1878
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9672,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 26,
+    "sparse": 19,
+    "rerank": 267,
+    "retrieve_total": 344,
+    "generation": 25883
+   },
+   "degraded": [],
+   "answer": "The sources don't say how many parameters GPT-4 has. The \"Lost in the Middle\" paper evaluates GPT-4 (8K) on a subset of 500 multi-document QA examples with 20 documents each, but it only reports performance, not model size [c_2][c_3]. The only parameter counts given are for other models: BERT-BASE (110M) and BERT-LARGE (340M) [c_1], and Llama-2 in 7B, 13B, and 70B sizes [c_2].",
+   "citations": [
+    {
+     "marker": "c_2",
+     "doc": "lost_in_the_middle",
+     "page": 15
+    },
+    {
+     "marker": "c_3",
+     "doc": "lost_in_the_middle",
+     "page": 5
+    },
+    {
+     "marker": "c_1",
+     "doc": "bert",
+     "page": 3
+    }
+   ],
+   "answer_cost_usd": 0.019384,
+   "answer_tokens": [
+    8877,
+    163
+   ],
+   "judge_cost_usd": 0.043759,
+   "judge": {
+    "refused": true,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly says GPT-4's parameter count is not in the sources, and its accurate, cited context about other models' sizes matches the reference."
+   },
+   "refused": true
+  },
+  {
+   "id": "una-08",
+   "type": "unanswerable",
+   "question": "What learning rate was used to train the RAG models?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.8377
+    },
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.8359
+    },
+    {
+     "doc": "rag",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.6444
+    },
+    {
+     "doc": "rag",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.5792
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.5074
+    },
+    {
+     "doc": "bert",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.4987
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.4484
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.431
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.4304
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.316
+    }
+   ],
+   "gated": false,
+   "top_score": 0.8377,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 24,
+    "sparse": 28,
+    "rerank": 246,
+    "retrieve_total": 328,
+    "generation": 28907
+   },
+   "degraded": [],
+   "answer": "The provided sources don't state the learning rate used to train the RAG models. The RAG training details I found cover only the setup: training used Fairseq with mixed-precision arithmetic across 8 32GB NVIDIA V100 GPUs [c_1]. The appendix on parameters covers model size, not the optimizer [c_2].\n\nThe only learning rates in the sources are for BERT, not RAG. These are 1e-4 for pre-training and 5e-5, 3e-5 or 2e-5 for fine-tuning [c_5]. They shouldn't be assumed to apply to RAG, though RAG does use a BERT-base encoder from DPR [c_2]. To find the RAG value, you'd need the paper's main text or the released training scripts, which are not included here.",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "rag",
+     "page": 17
+    },
+    {
+     "marker": "c_2",
+     "doc": "rag",
+     "page": 18
+    },
+    {
+     "marker": "c_5",
+     "doc": "bert",
+     "page": 13
+    }
+   ],
+   "answer_cost_usd": 0.022342,
+   "answer_tokens": [
+    8956,
+    443
+   ],
+   "judge_cost_usd": 0.043027,
+   "judge": {
+    "refused": true,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_5",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly says the RAG learning rate is absent, and its supporting details, including the BERT-only learning rates, are all sourced."
+   },
+   "refused": true
+  }
+ ],
+ "aggregate": {
+  "n": 49,
+  "n_answerable": 41,
+  "hit@5": 0.9268,
+  "recall@5": 0.878,
+  "hit@10": 0.9512,
+  "recall@10": 0.9268,
+  "mrr": 0.7401,
+  "by_type": {
+   "factual": {
+    "n": 30,
+    "hit@5": 0.9333,
+    "recall@5": 0.9167,
+    "mrr": 0.7222
+   },
+   "multi_hop": {
+    "n": 4,
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "mrr": 0.6333
+   },
+   "table": {
+    "n": 4,
+    "hit@5": 0.75,
+    "recall@5": 0.75,
+    "mrr": 0.7857
+   },
+   "comparison": {
+    "n": 3,
+    "hit@5": 1.0,
+    "recall@5": 0.5,
+    "mrr": 1.0
+   }
+  },
+  "refusal_accuracy": 1.0,
+  "false_refusal_rate": 0.0244,
+  "unanswerable_n": 8,
+  "answerable_n": 41,
+  "faithfulness": 0.9975,
+  "relevance": 0.9756,
+  "correctness": 0.9512,
+  "citation_precision": 0.9917,
+  "answer_cost_usd_per_query": 0.0158,
+  "judge_cost_usd_per_query": 0.0314,
+  "latency_ms": {
+   "embed": {
+    "p50": 26.0,
+    "p95": 30.0
+   },
+   "dense": {
+    "p50": 24.0,
+    "p95": 27.6
+   },
+   "sparse": {
+    "p50": 24.0,
+    "p95": 35.2
+   },
+   "rerank": {
+    "p50": 262.0,
+    "p95": 312.2
+   },
+   "retrieve_total": {
+    "p50": 341.0,
+    "p95": 391.2
+   },
+   "generation": {
+    "p50": 14730.0,
+    "p95": 25676.2
+   }
+  }
+ }
+}

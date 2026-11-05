@@ -1,0 +1,2 @@
+{"ids": ["att-04", "bert-02", "rag-06", "lim-01", "tab-02", "mh-02", "cmp-03", "una-01", "una-06", "una-08"],
+ "note": "CI subset: 4 factual, 1 table, 1 multi-hop, 1 comparison, 3 unanswerable. Model replies are recorded in recordings/smoke.json."}

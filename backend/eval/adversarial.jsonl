@@ -1,0 +1,20 @@
+{"id": "diff-01", "kind": "different_answer", "a": "How many layers does BERT-BASE have?", "answer_a": "12", "b": "How many layers does BERT-LARGE have?", "answer_b": "24"}
+{"id": "diff-02", "kind": "different_answer", "a": "How many attention heads does BERT-BASE have?", "answer_a": "12", "b": "How many attention heads does BERT-LARGE have?", "answer_b": "16"}
+{"id": "diff-03", "kind": "different_answer", "a": "What is the hidden size of BERT-BASE?", "answer_a": "768", "b": "What is the hidden size of BERT-LARGE?", "answer_b": "1024"}
+{"id": "diff-04", "kind": "different_answer", "a": "How many parameters does BERT-BASE have?", "answer_a": "110M", "b": "How many parameters does BERT-LARGE have?", "answer_b": "340M"}
+{"id": "diff-05", "kind": "different_answer", "a": "What BLEU score did the Transformer big model get on English-to-German?", "answer_a": "28.4", "b": "What BLEU score did the Transformer big model get on English-to-French?", "answer_b": "41.8"}
+{"id": "diff-06", "kind": "different_answer", "a": "What BLEU score did the Transformer base model get on English-to-German?", "answer_a": "27.3", "b": "What BLEU score did the Transformer big model get on English-to-German?", "answer_b": "28.4"}
+{"id": "diff-07", "kind": "different_answer", "a": "For how many steps were the Transformer base models trained?", "answer_a": "100,000", "b": "For how many steps were the Transformer big models trained?", "answer_b": "300,000"}
+{"id": "diff-08", "kind": "different_answer", "a": "What exact match did RAG-Sequence get on Natural Questions?", "answer_a": "44.5", "b": "What exact match did RAG-Token get on Natural Questions?", "answer_b": "44.1"}
+{"id": "diff-09", "kind": "different_answer", "a": "How long did the Transformer base model take to train?", "answer_a": "12 hours", "b": "How long did the Transformer big model take to train?", "answer_b": "3.5 days"}
+{"id": "diff-10", "kind": "different_answer", "a": "What percentage of masked tokens does BERT replace with the [MASK] token?", "answer_a": "80%", "b": "What percentage of masked tokens does BERT replace with a random token?", "answer_b": "10%"}
+{"id": "diff-11", "kind": "different_answer", "a": "What accuracy did BERT-LARGE get on the SWAG test set?", "answer_a": "86.3", "b": "What accuracy did BERT-BASE get on the SWAG dev set?", "answer_b": "81.6"}
+{"id": "diff-12", "kind": "different_answer", "a": "On how many Cloud TPUs was BERT-BASE trained?", "answer_a": "4", "b": "On how many Cloud TPUs was BERT-LARGE trained?", "answer_b": "16"}
+{"id": "same-01", "kind": "same_answer", "a": "How many layers does BERT-BASE have?", "b": "What is the number of layers in BERT-BASE?"}
+{"id": "same-02", "kind": "same_answer", "a": "What GLUE score did BERT achieve?", "b": "What was BERT's GLUE score?"}
+{"id": "same-03", "kind": "same_answer", "a": "How long did the big Transformer take to train?", "b": "How much training time did the big Transformer need?"}
+{"id": "same-04", "kind": "same_answer", "a": "Which retriever does RAG use?", "b": "What retriever is used by RAG?"}
+{"id": "same-05", "kind": "same_answer", "a": "What beam size was used for decoding in the Transformer?", "b": "Which beam size does the Transformer use when decoding?"}
+{"id": "same-06", "kind": "same_answer", "a": "What activation function does BERT use instead of relu?", "b": "Which activation does BERT use rather than relu?"}
+{"id": "same-07", "kind": "same_answer", "a": "Which dataset is used for the multi-document QA task?", "b": "What dataset does the multi-document question answering task use?"}
+{"id": "same-08", "kind": "same_answer", "a": "What warmup_steps value was used for the learning rate schedule?", "b": "Which warmup_steps setting did the Transformer use?"}

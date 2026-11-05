@@ -546,3 +546,22 @@ def test_agent_search_tool_against_real_database(tmp_path):
         assert "No relevant passages" in llm.converse_requests[-1].messages[-1]["content"][0]["content"]
     finally:
         app.dependency_overrides.clear()
+
+
+def test_pdf_text_with_nul_bytes_ingests_instead_of_failing(monkeypatch, tmp_path):
+    """Regression: the RAG paper's equations extract with NUL characters, which Postgres rejects."""
+    from app.models import Chunk
+    from app.services.ingestion import pipeline
+    from app.services.ingestion.parsers import clean_text
+    from app.services.ingestion.types import Block, ParsedDocument
+
+    dirty = "The retriever is p(z|x) = exp\x00 d(z)\x01 q(x)\x02. It uses a dense index of Wikipedia passages."
+    blocks = [Block(clean_text(dirty), 1, (0, 0, 1, 1))]
+    monkeypatch.setattr(pipeline, "parse", lambda *_a: ParsedDocument("t", blocks, 1))
+    user = _make_user()
+    doc_id = _ingest(user, tmp_path / "ignored.pdf")
+    with tenant_session(user) as s:
+        doc = s.get(Document, doc_id)
+        assert doc is not None and doc.status == "ready"
+        contents = [c.content for c in s.scalars(select(Chunk).where(Chunk.document_id == doc_id))]
+        assert contents and all("\x00" not in c for c in contents)

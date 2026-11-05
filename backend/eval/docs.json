@@ -1,0 +1,34 @@
+[
+  {
+    "key": "attention",
+    "title": "Attention Is All You Need",
+    "source": "https://arxiv.org/abs/1706.03762v7",
+    "pdf": "https://arxiv.org/pdf/1706.03762v7",
+    "sha256": "bdfaa68d8984f0dc02beaca527b76f207d99b666d31d1da728ee0728182df697",
+    "pages": 15
+  },
+  {
+    "key": "bert",
+    "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+    "source": "https://arxiv.org/abs/1810.04805v2",
+    "pdf": "https://arxiv.org/pdf/1810.04805v2",
+    "sha256": "5692a5514787a8c6727b4ff3b726a3385798bc68e12138d1d4af83947e2acf6e",
+    "pages": 16
+  },
+  {
+    "key": "rag",
+    "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+    "source": "https://arxiv.org/abs/2005.11401v4",
+    "pdf": "https://arxiv.org/pdf/2005.11401v4",
+    "sha256": "23e3249e9a1e75418d82efecab0ea8c4d033b89c93742f63208d47ce01f21233",
+    "pages": 19
+  },
+  {
+    "key": "lost_in_the_middle",
+    "title": "Lost in the Middle: How Language Models Use Long Contexts",
+    "source": "https://arxiv.org/abs/2307.03172v3",
+    "pdf": "https://arxiv.org/pdf/2307.03172v3",
+    "sha256": "653b29619eae2ae4b361d7bdcdc06db4bedcb1b0eabe31814036beca8c1af0b1",
+    "pages": 18
+  }
+]

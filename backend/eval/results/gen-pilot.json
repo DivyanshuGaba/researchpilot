@@ -1,0 +1,918 @@
+{
+ "label": "gen-pilot",
+ "created": "2026-11-05T19:38:54+00:00",
+ "git_sha": "7f835e0",
+ "config": {
+  "chunker": "recursive",
+  "child_tokens": 200,
+  "parent_tokens": 800,
+  "overlap_tokens": 33,
+  "semantic_percentile": 25,
+  "retrieval_mode": "hybrid_rerank",
+  "dense_k": 30,
+  "sparse_k": 30,
+  "rrf_k": 60,
+  "rerank_candidates": 30,
+  "top_k": 6,
+  "max_per_parent": 3,
+  "context_token_budget": 6000,
+  "compare_per_doc": 3,
+  "history_messages": 6,
+  "summarize_batch": 4,
+  "rewrite_model": "claude-haiku-5-5",
+  "quiz_max_passages": 12,
+  "summary_max_sections": 150,
+  "summary_concurrency": 5,
+  "summary_reduce_tokens": 6000,
+  "prompt_version": "v3"
+ },
+ "config_hash": "48e15e0889bbaa02",
+ "dataset": {
+  "file": "dataset.jsonl",
+  "sha256": "5f0e9de403bf8459",
+  "questions": 7
+ },
+ "models": {
+  "answer": "claude-sonnet-5-5",
+  "judge": "claude-opus-5-5",
+  "embedding": "BAAI/bge-small-en-v1.5",
+  "reranker": "cross_encoder",
+  "min_score": 0.05
+ },
+ "questions": [
+  {
+   "id": "att-04",
+   "type": "factual",
+   "question": "What BLEU score did the big Transformer achieve on the WMT 2014 English-to-German translation task?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 1.0
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 1.0
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9997
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.999
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9963
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.9873
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.9261
+    },
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.8857
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.1995
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.1869
+    }
+   ],
+   "gated": false,
+   "top_score": 1.0,
+   "timings_ms": {
+    "embed": 6930,
+    "dense": 54,
+    "sparse": 20,
+    "rerank": 1317,
+    "retrieve_total": 8326,
+    "generation": 2325
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 1.0,
+    "hit@10": 1.0,
+    "recall@10": 1.0,
+    "rr": 0.3333333333333333
+   },
+   "answer": "The big Transformer achieved a BLEU score of 28.4 on the WMT 2014 English-to-German task. This is a new state of the art, outperforming the best previously reported models, including ensembles, by more than 2.0 BLEU [c_1]. Training took 3.5 days on 8 P100 GPUs [c_1]. The abstract and Table 2 give the same 28.4 figure [c_2][c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "attention",
+     "page": 8
+    },
+    {
+     "marker": "c_2",
+     "doc": "attention",
+     "page": 1
+    }
+   ],
+   "answer_cost_usd": 0.009238,
+   "answer_tokens": [
+    3924,
+    139
+   ],
+   "judge_cost_usd": 0.022518,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer gives 28.4 BLEU, matching the reference, and every added detail (more than 2.0 BLEU over prior models, 3.5 days on 8 P100 GPUs, same figure in abstract and Table 2) is supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "bert-02",
+   "type": "factual",
+   "question": "What percentage of tokens does BERT mask for the masked language model, and how are the chosen tokens replaced?",
+   "retrieved": [
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.979
+    },
+    {
+     "doc": "bert",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.9737
+    },
+    {
+     "doc": "bert",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.9608
+    },
+    {
+     "doc": "bert",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.9607
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.9537
+    },
+    {
+     "doc": "bert",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.9283
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.8901
+    },
+    {
+     "doc": "bert",
+     "p0": 16,
+     "p1": 16,
+     "score": 0.7807
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.7242
+    },
+    {
+     "doc": "bert",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.608
+    }
+   ],
+   "gated": false,
+   "top_score": 0.979,
+   "timings_ms": {
+    "embed": 35,
+    "dense": 25,
+    "sparse": 18,
+    "rerank": 183,
+    "retrieve_total": 272,
+    "generation": 2846
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 0.5,
+    "hit@10": 1.0,
+    "recall@10": 0.5,
+    "rr": 1.0
+   },
+   "answer": "BERT masks 15% of all WordPiece tokens in each sequence at random [c_1]. Each chosen token is replaced as follows:\n\n- **80% of the time:** it becomes the [MASK] token [c_1].\n- **10% of the time:** it becomes a random token [c_1].\n- **10% of the time:** it stays unchanged [c_1].\n\nThe model then uses the final hidden vector Ti to predict the original token, trained with cross-entropy loss [c_1].\n\nThe mixed strategy is meant to reduce the mismatch between pre-training and fine-tuning, because the [MASK] token never appears during fine-tuning [c_1][c_3]. Keeping the word unchanged biases the representation toward the actual observed word [c_2]. Random replacement affects only 1.5% of all tokens (10% of 15%), which does not seem to harm language understanding [c_2].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "bert",
+     "page": 4
+    },
+    {
+     "marker": "c_3",
+     "doc": "bert",
+     "page": 16
+    },
+    {
+     "marker": "c_2",
+     "doc": "bert",
+     "page": 12
+    }
+   ],
+   "answer_cost_usd": 0.01275,
+   "answer_tokens": [
+    4930,
+    289
+   ],
+   "judge_cost_usd": 0.025774,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_2",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer matches the reference (15%, then 80/10/10), and every claim is supported by the cited sources."
+   },
+   "refused": false
+  },
+  {
+   "id": "rag-06",
+   "type": "factual",
+   "question": "What did the index hot-swapping experiment show about mismatched document indices?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.849
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.0145
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.0076
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.0056
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0019
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0016
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.0005
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0004
+    },
+    {
+     "doc": "rag",
+     "p0": 19,
+     "p1": 19,
+     "score": 0.0003
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.0003
+    }
+   ],
+   "gated": false,
+   "top_score": 0.849,
+   "timings_ms": {
+    "embed": 25,
+    "dense": 26,
+    "sparse": 18,
+    "rerank": 159,
+    "retrieve_total": 235,
+    "generation": 3030
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 0.0,
+    "recall@5": 0.0,
+    "hit@10": 0.0,
+    "recall@10": 0.0,
+    "rr": 0.0
+   },
+   "answer": "The experiment showed that RAG's accuracy drops sharply when the index doesn't match the time period of the question. The authors built a 2016 index (the DrQA Wikipedia dump from December 2016) and compared it with the newer December 2018 index. They then queried an NQ RAG model with \"Who is {position}?\" for 82 world leaders who had changed between those dates [c_1].\n\n- **Matched indices:** RAG answered 70% correctly using the 2016 index for 2016 leaders, and 68% using the 2018 index for 2018 leaders [c_1].\n- **Mismatched indices:** Accuracy was low, at 12% with the 2018 index and 2016 leaders, and 4% with the 2016 index and 2018 leaders [c_1].\n\nThe authors conclude that RAG's world knowledge can be updated simply by replacing its non-parametric memory [c_1].",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "rag",
+     "page": 7
+    }
+   ],
+   "answer_cost_usd": 0.015322,
+   "answer_tokens": [
+    6211,
+    290
+   ],
+   "judge_cost_usd": 0.028739,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer accurately reports all matched and mismatched accuracy figures and the conclusion, all supported by c_1."
+   },
+   "refused": false
+  },
+  {
+   "id": "cmp-03",
+   "type": "comparison",
+   "question": "RAG's DPR retriever is built on BERT-base. How many parameters do its encoders have, and how does that compare with BERT-BASE's stated size?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.9962
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.9798
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.9414
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.8885
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.6261
+    },
+    {
+     "doc": "rag",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.6141
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.5075
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.2497
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.1396
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.1251
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9962,
+   "timings_ms": {
+    "embed": 16,
+    "dense": 15,
+    "sparse": 11,
+    "rerank": 219,
+    "retrieve_total": 265,
+    "generation": 4888
+   },
+   "degraded": [],
+   "retrieval": {
+    "hit@5": 1.0,
+    "recall@5": 0.5,
+    "hit@10": 1.0,
+    "recall@10": 0.5,
+    "rr": 1.0
+   },
+   "answer": "Each DPR encoder in RAG, the query encoder and the document encoder, has 110M parameters, so the two together have about 220M [c_1]. Both are based on BERT-BASE [c_4]. The document encoder is not trained by the authors, and its index stays fixed. Only the query encoder and the BART generator are fine-tuned [c_1][c_4].\n\nThe sources don't give a separate \"stated size\" for BERT-BASE itself, so I can't make a direct numerical comparison. The only figure is the 110M that c_1 gives for each encoder, and the encoders are described as BERT-base models, so they appear to be standard-size BERT-base with no added parameters. This is an inference, not an explicit statement in the sources.",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "rag",
+     "page": 18
+    },
+    {
+     "marker": "c_4",
+     "doc": "rag",
+     "page": 3
+    }
+   ],
+   "answer_cost_usd": 0.017726,
+   "answer_tokens": [
+    6308,
+    511
+   ],
+   "judge_cost_usd": 0.036623,
+   "judge": {
+    "refused": false,
+    "faithfulness": 1.0,
+    "correctness": "partial",
+    "relevance": 4,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly gives 110M per encoder but only tentatively infers that this matches BERT-BASE, rather than stating that BERT-BASE is 110M as the reference does."
+   },
+   "refused": false
+  },
+  {
+   "id": "una-01",
+   "type": "unanswerable",
+   "question": "What is the capital of Mongolia?",
+   "retrieved": [
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 4,
+     "p1": 4,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.0
+    },
+    {
+     "doc": "lost_in_the_middle",
+     "p0": 13,
+     "p1": 13,
+     "score": 0.0
+    },
+    {
+     "doc": "bert",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.0
+    },
+    {
+     "doc": "rag",
+     "p0": 12,
+     "p1": 12,
+     "score": 0.0
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0,
+   "timings_ms": {
+    "embed": 30,
+    "dense": 30,
+    "sparse": 3,
+    "rerank": 153,
+    "retrieve_total": 222,
+    "generation": 1321
+   },
+   "degraded": [],
+   "answer": "Your documents don't seem to cover this question, so I won't guess.",
+   "citations": [],
+   "answer_cost_usd": 0.0,
+   "answer_tokens": [
+    0,
+    0
+   ],
+   "refused": true,
+   "judge": null
+  },
+  {
+   "id": "una-06",
+   "type": "unanswerable",
+   "question": "What was the carbon footprint, in kilograms of CO2, of training the Transformer?",
+   "retrieved": [
+    {
+     "doc": "attention",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.0094
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0038
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0022
+    },
+    {
+     "doc": "bert",
+     "p0": 14,
+     "p1": 14,
+     "score": 0.0016
+    },
+    {
+     "doc": "attention",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.0014
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0013
+    },
+    {
+     "doc": "attention",
+     "p0": 10,
+     "p1": 10,
+     "score": 0.0006
+    },
+    {
+     "doc": "rag",
+     "p0": 3,
+     "p1": 3,
+     "score": 0.0003
+    },
+    {
+     "doc": "attention",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0002
+    },
+    {
+     "doc": "bert",
+     "p0": 8,
+     "p1": 8,
+     "score": 0.0001
+    }
+   ],
+   "gated": true,
+   "top_score": 0.0094,
+   "timings_ms": {
+    "embed": 29,
+    "dense": 27,
+    "sparse": 21,
+    "rerank": 190,
+    "retrieve_total": 274,
+    "generation": 1046
+   },
+   "degraded": [],
+   "answer": "Your documents don't seem to cover this question, so I won't guess.",
+   "citations": [],
+   "answer_cost_usd": 0.0,
+   "answer_tokens": [
+    0,
+    0
+   ],
+   "refused": true,
+   "judge": null
+  },
+  {
+   "id": "una-08",
+   "type": "unanswerable",
+   "question": "What learning rate was used to train the RAG models?",
+   "retrieved": [
+    {
+     "doc": "rag",
+     "p0": 18,
+     "p1": 18,
+     "score": 0.9023
+    },
+    {
+     "doc": "rag",
+     "p0": 6,
+     "p1": 6,
+     "score": 0.8732
+    },
+    {
+     "doc": "attention",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.6708
+    },
+    {
+     "doc": "rag",
+     "p0": 1,
+     "p1": 1,
+     "score": 0.575
+    },
+    {
+     "doc": "rag",
+     "p0": 7,
+     "p1": 7,
+     "score": 0.5074
+    },
+    {
+     "doc": "rag",
+     "p0": 2,
+     "p1": 2,
+     "score": 0.4627
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.3042
+    },
+    {
+     "doc": "rag",
+     "p0": 9,
+     "p1": 9,
+     "score": 0.2357
+    },
+    {
+     "doc": "rag",
+     "p0": 5,
+     "p1": 5,
+     "score": 0.2171
+    },
+    {
+     "doc": "rag",
+     "p0": 17,
+     "p1": 17,
+     "score": 0.1734
+    }
+   ],
+   "gated": false,
+   "top_score": 0.9023,
+   "timings_ms": {
+    "embed": 26,
+    "dense": 25,
+    "sparse": 22,
+    "rerank": 154,
+    "retrieve_total": 233,
+    "generation": 4169
+   },
+   "degraded": [],
+   "answer": "The provided sources don't say what learning rate was used to train the RAG models. The RAG excerpts describe the architecture, datasets, parameter counts (about 626M trainable parameters) and ablations, but none gives a learning rate [c_1][c_4][c_6].\n\nThe only learning-rate information is in \"Attention Is All You Need\". It describes the Transformer's Adam optimizer (β1 = 0.9, β2 = 0.98, ϵ = 10⁻⁹) and a warmup-based schedule [c_3]. That is a different paper's training setup, so it shouldn't be assumed to apply to RAG.\n\nTo answer this, you would need other sections of the RAG paper, such as its training details, or its released code.",
+   "citations": [
+    {
+     "marker": "c_1",
+     "doc": "rag",
+     "page": 18
+    },
+    {
+     "marker": "c_4",
+     "doc": "rag",
+     "page": 1
+    },
+    {
+     "marker": "c_6",
+     "doc": "rag",
+     "page": 2
+    },
+    {
+     "marker": "c_3",
+     "doc": "attention",
+     "page": 7
+    }
+   ],
+   "answer_cost_usd": 0.019004,
+   "answer_tokens": [
+    7802,
+    340
+   ],
+   "judge_cost_usd": 0.034811,
+   "judge": {
+    "refused": true,
+    "faithfulness": 1.0,
+    "correctness": "correct",
+    "relevance": 5,
+    "citations": [
+     {
+      "marker": "c_1",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_4",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_6",
+      "supports_claim": true
+     },
+     {
+      "marker": "c_3",
+      "supports_claim": true
+     }
+    ],
+    "notes": "The answer correctly declines to give a RAG learning rate, and it accurately notes that the only learning-rate details come from the Transformer paper."
+   },
+   "refused": true
+  }
+ ],
+ "aggregate": {
+  "n": 7,
+  "n_answerable": 4,
+  "hit@5": 0.75,
+  "recall@5": 0.5,
+  "hit@10": 0.75,
+  "recall@10": 0.5,
+  "mrr": 0.5833,
+  "by_type": {
+   "factual": {
+    "n": 3,
+    "hit@5": 0.6667,
+    "recall@5": 0.5,
+    "mrr": 0.4444
+   },
+   "comparison": {
+    "n": 1,
+    "hit@5": 1.0,
+    "recall@5": 0.5,
+    "mrr": 1.0
+   }
+  },
+  "refusal_accuracy": 1.0,
+  "false_refusal_rate": 0.0,
+  "unanswerable_n": 3,
+  "answerable_n": 4,
+  "faithfulness": 1.0,
+  "relevance": 0.95,
+  "correctness": 0.875,
+  "citation_precision": 1.0,
+  "answer_cost_usd_per_query": 0.0106,
+  "judge_cost_usd_per_query": 0.0212,
+  "latency_ms": {
+   "embed": {
+    "p50": 29.0,
+    "p95": 4861.500000000001
+   },
+   "dense": {
+    "p50": 26.0,
+    "p95": 46.800000000000004
+   },
+   "sparse": {
+    "p50": 18.0,
+    "p95": 21.7
+   },
+   "rerank": {
+    "p50": 183.0,
+    "p95": 987.6000000000003
+   },
+   "retrieve_total": {
+    "p50": 265.0,
+    "p95": 5910.4000000000015
+   },
+   "generation": {
+    "p50": 2846.0,
+    "p95": 4672.3
+   }
+  }
+ }
+}

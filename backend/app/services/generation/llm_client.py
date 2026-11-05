@@ -16,6 +16,7 @@ SAFE_MESSAGES = {
     "timeout": "The model took too long to respond. Please try again.",
     "unavailable": "The model service is temporarily unavailable. Please try again shortly.",
     "misconfigured": "The model service is not configured correctly. Please contact the administrator.",
+    "billing": "The model service is unavailable because of an account issue. Please contact the administrator.",
 }
 
 
@@ -39,6 +40,9 @@ def classify_error(exc: Exception) -> LLMUnavailable | None:
     if isinstance(exc, anthropic.AuthenticationError | anthropic.PermissionDeniedError):
         log.error("model provider rejected our credentials")  # operator problem, not the user's
         return LLMUnavailable("misconfigured")
+    if isinstance(exc, anthropic.BadRequestError) and "credit balance" in str(exc).lower():
+        log.error("model provider reports the credit balance is too low")  # operator problem
+        return LLMUnavailable("billing")
     if isinstance(exc, anthropic.APIConnectionError | anthropic.InternalServerError):
         return LLMUnavailable("unavailable")
     if isinstance(exc, anthropic.APIStatusError) and exc.status_code >= 500:
