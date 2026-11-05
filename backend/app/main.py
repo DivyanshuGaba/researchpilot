@@ -46,7 +46,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(title="ResearchPilot", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=get_settings().cors_origins,
+    allow_origins=get_settings().cors_origins,  # explicit origins: required with credentials
+    allow_credentials=True,  # the browser sends the HttpOnly refresh cookie cross-origin
     allow_methods=["*"],
     allow_headers=["*"],
 )

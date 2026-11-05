@@ -80,10 +80,15 @@ export default function ChatPage() {
           closest: e.closest.length ? e.closest : m.closest,
           standalone: e.standaloneQuery,
           stopped_reason: e.stopped,
+          cache: e.cacheStatus,
         }));
         break;
       case "error":
-        patchLast((m) => ({ ...m, error: e.message, streaming: false }));
+        patchLast((m) => ({
+          ...m,
+          error: e.retryAfter ? `${e.message} (try again in about ${e.retryAfter}s)` : e.message,
+          streaming: false,
+        }));
         break;
     }
   }

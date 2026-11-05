@@ -16,6 +16,7 @@ export type ChatMsg = {
   standalone?: string; // the rewritten search query, shown when it differs from the question
   question?: string;
   tools?: ToolInfo[];
+  cache?: string; // exact | semantic when the answer came from the response cache
   stopped_reason?: string | null; // agent stopped early (limit hit)
 };
 
@@ -112,6 +113,11 @@ export default function ChatMessage({ msg, onCite, onClosest, activeChunk }: Pro
       )}
       {msg.standalone && !msg.streaming && msg.standalone !== msg.question && (
         <p className="text-xs text-zinc-400">Searched for: {msg.standalone}</p>
+      )}
+      {msg.cache && msg.cache !== "miss" && !msg.streaming && (
+        <p className="text-xs text-zinc-400" title="This question was answered before; no model call was made">
+          ⚡ Answered from cache ({msg.cache})
+        </p>
       )}
       {msg.stopped && <p className="text-xs text-zinc-500">Stopped.</p>}
       {msg.error && <p className="text-sm text-red-600">{msg.error}</p>}

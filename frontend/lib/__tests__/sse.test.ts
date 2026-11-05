@@ -22,6 +22,7 @@ describe("parseFrame", () => {
       closest: [],
       degraded: [],
       stopped: null,
+      cacheStatus: "miss",
     });
     expect(parseFrame('event: error\ndata: {"message": "boom"}')).toEqual({ type: "error", message: "boom" });
   });
@@ -45,6 +46,20 @@ describe("parseFrame", () => {
       type: "tool",
       tool: { id: "t1", name: "calculator", status: "finished", duration_ms: 3 },
     });
+  });
+
+  it("parses model-outage errors with their code and retry hint", () => {
+    expect(
+      parseFrame('event: error\ndata: {"code": "rate_limited", "message": "The model is busy", "retry_after": 30}'),
+    ).toEqual({ type: "error", message: "The model is busy", code: "rate_limited", retryAfter: 30 });
+    expect(parseFrame('event: error\ndata: {"code": "internal", "message": "oops", "retry_after": null}')).toMatchObject({
+      retryAfter: undefined,
+    });
+  });
+
+  it("reads the cache status from the done event", () => {
+    const f = parseFrame('event: done\ndata: {"answer": "A", "conversation_id": "c", "message_id": "m", "cache_status": "semantic"}');
+    expect(f).toMatchObject({ type: "done", cacheStatus: "semantic" });
   });
 
   it("returns null for unknown or empty frames", () => {

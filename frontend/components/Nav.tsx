@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { logout, type Session } from "@/lib/api";
+import { logout, type SessionState } from "@/lib/session";
 
-export default function Nav({ session }: { session: Session }) {
+export default function Nav({ session }: { session: SessionState }) {
   const path = usePathname();
   const link = (href: string, label: string) => (
     <Link
@@ -25,10 +25,11 @@ export default function Nav({ session }: { session: Session }) {
         {link("/documents", "Documents")}
         {link("/chat", "Chat")}
         {link("/study", "Study")}
+        {session.isAdmin && link("/metrics", "Metrics")}
       </nav>
       <div className="flex items-center gap-3 text-sm text-zinc-500">
         <span>{session.email}</span>
-        <button className="underline" onClick={logout}>
+        <button className="underline" onClick={() => void logout()}>
           Sign out
         </button>
       </div>

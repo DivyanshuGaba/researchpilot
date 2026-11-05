@@ -1,60 +1,9 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+import { API_URL, ApiError, authFetch, errorFrom, getToken } from "./session";
 
-const USER_KEY = "rp_user";
-
-export type Session = { userId: string; email: string };
-
-// --- session storage exposed as an external store so React can subscribe safely -------------
-const listeners = new Set<() => void>();
-let cached: { raw: string | null; value: Session | null } = { raw: null, value: null };
-
-export function subscribeSession(cb: () => void): () => void {
-  listeners.add(cb);
-  window.addEventListener("storage", cb);
-  return () => {
-    listeners.delete(cb);
-    window.removeEventListener("storage", cb);
-  };
-}
-
-export function getSessionSnapshot(): Session | null {
-  const raw = localStorage.getItem(USER_KEY);
-  if (raw !== cached.raw) {
-    let value: Session | null = null;
-    try {
-      value = raw ? (JSON.parse(raw) as Session) : null;
-    } catch {
-      value = null;
-    }
-    cached = { raw, value };
-  }
-  return cached.value;
-}
-
-export const getServerSession = (): Session | null => null;
-
-function setSession(s: Session | null) {
-  if (s) localStorage.setItem(USER_KEY, JSON.stringify(s));
-  else localStorage.removeItem(USER_KEY);
-  listeners.forEach((l) => l());
-}
-
-export const logout = () => setSession(null);
-
-function headers(extra: Record<string, string> = {}): Record<string, string> {
-  const s = getSessionSnapshot();
-  return { ...(s ? { "X-User-Id": s.userId } : {}), ...extra };
-}
+export { API_URL, ApiError };
 
 async function json<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    let detail = res.statusText;
-    try {
-      const body = await res.json();
-      detail = typeof body.detail === "string" ? body.detail : detail;
-    } catch {}
-    throw new Error(detail);
-  }
+  if (!res.ok) throw await errorFrom(res);
   return res.json() as Promise<T>;
 }
 
@@ -82,45 +31,37 @@ export type Citation = {
 };
 
 // --- calls ---------------------------------------------------------------------------------
-export async function login(email: string): Promise<void> {
-  const res = await fetch(`${API_URL}/auth/dev-user`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email }),
-  });
-  const { user_id } = await json<{ user_id: string }>(res);
-  setSession({ userId: user_id, email });
-}
-
 export async function listDocuments(): Promise<Doc[]> {
-  return json(await fetch(`${API_URL}/documents`, { headers: headers() }));
+  return json(await authFetch("/documents"));
 }
 
 export async function addUrl(url: string): Promise<Doc> {
   return json(
-    await fetch(`${API_URL}/documents/url`, {
+    await authFetch("/documents/url", {
       method: "POST",
-      headers: headers({ "content-type": "application/json" }),
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({ url }),
     }),
   );
 }
 
 /** XHR rather than fetch because fetch cannot report upload progress. */
-export function uploadDocument(file: File, onProgress: (fraction: number) => void): Promise<Doc> {
+export async function uploadDocument(file: File, onProgress: (fraction: number) => void): Promise<Doc> {
+  const token = await getToken();
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${API_URL}/documents`);
-    for (const [k, v] of Object.entries(headers())) xhr.setRequestHeader(k, v);
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) resolve(JSON.parse(xhr.responseText));
       else {
         let detail = xhr.statusText;
         try {
-          detail = JSON.parse(xhr.responseText).detail ?? detail;
+          const d = JSON.parse(xhr.responseText).detail;
+          detail = typeof d === "string" ? d : (d?.message ?? detail);
         } catch {}
-        reject(new Error(detail));
+        reject(new ApiError(xhr.status, detail));
       }
     };
     xhr.onerror = () => reject(new Error("Network error"));
@@ -131,7 +72,7 @@ export function uploadDocument(file: File, onProgress: (fraction: number) => voi
 }
 
 export async function fetchPdf(documentId: string): Promise<Blob> {
-  const res = await fetch(`${API_URL}/documents/${documentId}/file`, { headers: headers() });
+  const res = await authFetch(`/documents/${documentId}/file`);
   if (!res.ok) throw new Error("Could not load the PDF");
   return res.blob();
 }
@@ -170,8 +111,9 @@ export type ChatEvent =
       closest: Closest[];
       degraded: string[];
       stopped: string | null;
+      cacheStatus: string;
     }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string; code?: string; retryAfter?: number };
 
 /** POST + SSE over fetch (EventSource cannot send a body or custom headers). */
 export async function streamChat(
@@ -184,18 +126,15 @@ export async function streamChat(
   onEvent: (e: ChatEvent) => void,
   signal: AbortSignal,
 ): Promise<void> {
-  const res = await fetch(`${API_URL}/chat/stream`, {
+  const res = await authFetch("/chat/stream", {
     method: "POST",
-    headers: headers({ "content-type": "application/json" }),
+    headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
     signal,
   });
   if (!res.ok || !res.body) {
-    let detail = res.statusText;
-    try {
-      detail = (await res.json()).detail ?? detail;
-    } catch {}
-    onEvent({ type: "error", message: detail });
+    const err = await errorFrom(res);
+    onEvent({ type: "error", message: err.message, code: String(err.status), retryAfter: err.retryAfter });
     return;
   }
   const reader = res.body.getReader();
@@ -246,9 +185,10 @@ export function parseFrame(frame: string): ChatEvent | null {
         closest: (d.closest ?? []) as Closest[],
         degraded: d.degraded ?? [],
         stopped: d.stopped ?? null,
+        cacheStatus: d.cache_status ?? "miss",
       };
     case "error":
-      return { type: "error", message: d.message };
+      return { type: "error", message: d.message, code: d.code, retryAfter: d.retry_after ?? undefined };
     default:
       return null;
   }
@@ -288,9 +228,9 @@ export type Summary = {
 
 async function post<T>(path: string, body: unknown): Promise<T> {
   return json(
-    await fetch(`${API_URL}${path}`, {
+    await authFetch(path, {
       method: "POST",
-      headers: headers({ "content-type": "application/json" }),
+      headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     }),
   );
@@ -301,3 +241,32 @@ export const createQuiz = (document_id: string, num_questions: number) =>
 export const createFlashcards = (document_id: string, num_cards: number) =>
   post<CardSet>("/study/flashcards", { document_id, num_cards });
 export const createSummary = (document_id: string) => post<Summary>("/study/summaries", { document_id });
+
+// --- admin ---------------------------------------------------------------------------------
+
+export type Metrics = {
+  window_days: number;
+  queries: number;
+  active_users: number;
+  latency_ms: { p50: number | null; p95: number | null };
+  stages: Record<string, { p50_ms: number | null; p95_ms: number | null; samples: number }>;
+  tokens: { input: number; output: number; cache_read: number };
+  cost_usd: { total: number | null; per_query: number | null };
+  cache: { by_layer: Record<string, number>; hit_rate: number | null };
+  refusal_rate: number | null;
+  error_rate: number | null;
+  errors_by_type: Record<string, number>;
+  modes: Record<string, number>;
+  degraded: Record<string, number>;
+  daily: { day: string; queries: number; cost_usd: number | null }[];
+  ingestion: {
+    documents_by_status: Record<string, number>;
+    failure_rate: number | null;
+    seconds_per_page: number | null;
+    queue_depth: number;
+  };
+};
+
+export async function fetchMetrics(days: number): Promise<Metrics> {
+  return json(await authFetch(`/admin/metrics?days=${days}`));
+}

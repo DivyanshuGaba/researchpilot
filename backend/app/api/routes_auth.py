@@ -26,6 +26,7 @@ class TokenOut(BaseModel):
     expires_in: int
     email: str
     user_id: str
+    is_admin: bool = False
     token_type: str = "bearer"
 
 
@@ -45,7 +46,10 @@ def _check_origin(request: Request, settings: Settings) -> None:
 
 def _token_out(user: User, settings: Settings) -> TokenOut:
     token, ttl = auth.create_access_token(user.id, settings)
-    return TokenOut(access_token=token, expires_in=ttl, email=user.email, user_id=str(user.id))
+    admin = user.email.lower() in {e.lower() for e in settings.admin_emails}
+    return TokenOut(
+        access_token=token, expires_in=ttl, email=user.email, user_id=str(user.id), is_admin=admin
+    )
 
 
 @router.post("/register", status_code=201)
@@ -140,9 +144,12 @@ def logout(
 
 
 @router.get("/me")
-def me(user_id=Depends(current_user_id)) -> dict[str, str]:
+def me(
+    user_id=Depends(current_user_id), settings: Settings = Depends(settings_dep)
+) -> dict[str, str | bool]:
     with get_factory()() as session:
         user = session.get(User, user_id)
         if user is None:
             raise HTTPException(401, "unknown user")
-        return {"user_id": str(user.id), "email": user.email}
+        admin = user.email.lower() in {e.lower() for e in settings.admin_emails}
+        return {"user_id": str(user.id), "email": user.email, "is_admin": admin}

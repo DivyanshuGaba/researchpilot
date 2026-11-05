@@ -81,10 +81,10 @@ async def _one(
     turn = Turn(question=q, groups=[Group(None, hits)], gated=got.gated,
                 closest=got.ranked[:3] if got.gated else [])
     metered = MeteredLLM(answer_llm)
-    t1 = time.perf_counter()
     async with llm_sem:
+        t1 = time.perf_counter()  # start after acquiring the slot: queueing is not generation time
         ans = await answer_question(turn, metered, settings, cfg)
-    out["timings_ms"]["generation"] = int((time.perf_counter() - t1) * 1000)
+        out["timings_ms"]["generation"] = int((time.perf_counter() - t1) * 1000)
     out["answer"] = ans.answer
     out["citations"] = [{"marker": c.marker, "doc": key_by_id.get(c.document_id, "?"), "page": c.page_start}
                         for c in ans.citations]

@@ -91,7 +91,8 @@ def test_register_login_me_flow_and_cookie_attributes(client):
     token = r.json()["access_token"]
 
     me = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
-    assert me.json()["email"] == email
+    assert me.json()["email"] == email and me.json()["is_admin"] is False
+    assert r.json()["is_admin"] is False
 
     with get_factory()() as s:
         user = s.scalar(select(User).where(User.email == email))
@@ -182,6 +183,15 @@ def test_cross_site_origins_cannot_use_the_cookie_endpoints(client):
     assert client.post("/auth/login", json={"email": _email(), "password": PASSWORD}, headers=evil).status_code == 403
 
 
+def test_admin_flag_follows_the_configured_admin_emails(client):
+    email = _email()
+    app.dependency_overrides[deps.settings_dep] = lambda: Settings(admin_emails=[email.upper()])
+    _, r = register(client, email)
+    assert r.json()["is_admin"] is True  # case-insensitive match
+    other = register(client)[1]
+    assert other.json()["is_admin"] is False
+
+
 def test_registration_can_be_closed(client):
     app.dependency_overrides[deps.settings_dep] = lambda: Settings(registration_enabled=False)
     assert register(client)[1].status_code == 403
@@ -265,3 +275,19 @@ async def test_real_redis_limiter_if_available():
     uid = uuid.uuid4()
     await lim.add_tokens(uid, 123)
     assert await lim.tokens_used(uid) == 123
+
+
+def test_cors_allows_credentials_only_for_configured_origins(client):
+    """The browser refuses the refresh cookie unless the API says credentials are allowed, and
+    credentialed CORS must never be combined with a wildcard origin."""
+    good = client.options(
+        "/auth/refresh",
+        headers={"Origin": "http://localhost:3000", "Access-Control-Request-Method": "POST"},
+    )
+    assert good.headers["access-control-allow-origin"] == "http://localhost:3000"
+    assert good.headers["access-control-allow-credentials"] == "true"
+    bad = client.options(
+        "/auth/refresh",
+        headers={"Origin": "https://evil.example", "Access-Control-Request-Method": "POST"},
+    )
+    assert "access-control-allow-origin" not in bad.headers
