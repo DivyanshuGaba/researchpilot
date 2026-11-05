@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     retrieval_min_score: float = 0.35
     upload_dir: str = "./storage/uploads"
     max_upload_mb: int = 50
+    warm_embedder: bool = True
     cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     pipeline: PipelineConfig = PipelineConfig()
 

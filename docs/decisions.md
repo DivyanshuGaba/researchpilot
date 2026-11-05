@@ -28,3 +28,14 @@ Ambiguities resolved with the simplest reasonable option (CLAUDE.md section 12).
 - **Session in `localStorage` via `useSyncExternalStore`**; redirects wait for hydration, otherwise a reload signs the user out.
 - **Node 22 for the frontend.** The scaffold's Tailwind v4 pipeline fails on Node 20.14. `@tailwindcss/turbopack` was replaced by the standard `@tailwindcss/postcss`.
 - **Upload title stays the user's filename.** Ingestion previously overwrote it with the random stored name; fixed with a regression assertion.
+
+## Real-stack verification (end of Phase 2)
+
+Ran the real Celery worker (`--pool=solo`; fork plus torch is risky on macOS), real `bge-small` embedder, real Postgres and real Claude (`claude-sonnet-5-5`):
+
+- Upload to `ready` in about 7.5 s for a 3 page PDF; correct page counts and title.
+- Streaming answers were grounded, cited the right page with bounding boxes, and declined to invent an unsupported "why".
+- Client disconnect mid-stream saved the partial answer with `incomplete = true`.
+- No API key or traceback in the API or worker logs.
+- **Embedder warm-up at API start** (`WARM_EMBEDDER`, default on). The first question previously paid about 5 s for model loading.
+- **Known weakness, for Phase 3:** an unanswerable question ("capital of Mongolia") still retrieves the nearest chunk, and the model's refusal carries a `[c_1]` citation. The confidence gate (rerank score vs `RETRIEVAL_MIN_SCORE`) is what should short-circuit this before the LLM and return no citation.
