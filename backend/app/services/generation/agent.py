@@ -14,7 +14,11 @@ from typing import Any
 
 from app.config import Settings
 from app.services.generation.llm_client import ConverseRequest, LLMClient, ToolCall
-from app.services.generation.prompts import WRAP_UP_NUDGE, get_system_prompt
+from app.services.generation.prompts import (
+    WRAP_UP_NUDGE,
+    empty_answer_message,
+    get_system_prompt,
+)
 from app.services.generation.rag_chain import Citation, StreamEvent, validate_citations
 from app.services.generation.tools import ToolBox, ToolResult
 from app.services.vectorstore import Hit
@@ -111,7 +115,7 @@ async def run_agent(
             result.input_tokens += turn.input_tokens
             result.output_tokens += turn.output_tokens
             if not turn.tool_calls:
-                final = turn.text
+                final = turn.text.strip() or empty_answer_message(turn.stop_reason)
                 break
             messages.append({"role": "assistant", "content": turn.content_blocks})
             results: list[dict[str, Any]] = []
@@ -147,7 +151,8 @@ async def run_agent(
         result.input_tokens += turn.input_tokens
         result.output_tokens += turn.output_tokens
         note = STOP_NOTES.get(result.stopped or "", "stopped early")
-        final = f"{turn.text.strip()}\n\n(Stopped early: {note}, so this answer may be incomplete.)"
+        body = turn.text.strip() or empty_answer_message(turn.stop_reason)
+        final = f"{body}\n\n(Stopped early: {note}, so this answer may be incomplete.)"
 
     result.answer, result.citations = validate_citations(final, by_marker)
     log.info(

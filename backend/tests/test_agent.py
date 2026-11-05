@@ -202,3 +202,26 @@ def test_agent_respects_document_scope_in_search():
 def _clear():
     yield
     app.dependency_overrides.clear()
+
+
+async def test_refusal_with_no_content_becomes_a_clear_message_not_a_blank_answer():
+    llm = FakeLLM()
+    llm.script = [text_turn("", stop_reason="refusal")]
+    result, _ = await _agent(llm)
+    assert result.answer == "The model declined to answer this request."
+    llm.script = [text_turn("", stop_reason="end_turn")]
+    result, _ = await _agent(llm)
+    assert "didn't return an answer" in result.answer
+
+
+def test_qa_paths_also_handle_an_empty_model_reply():
+    llm = FakeLLM(text="")
+    llm.stop_reason = "refusal"
+    deps, _ = make_deps(FakeStore([make_hit("Mitochondria make ATP.")]), llm)
+    app.dependency_overrides[api_deps.chat_deps] = lambda: deps
+    client = TestClient(app)
+    body = client.post("/chat", json={"question": "ATP?"}, headers=H).json()
+    assert body["answer"] == "The model declined to answer this request." and body["citations"] == []
+    with client.stream("POST", "/chat/stream", json={"question": "ATP?"}, headers=H) as r:
+        text = "".join(r.iter_text())
+    assert "declined to answer" in text and "event: done" in text

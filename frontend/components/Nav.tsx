@@ -24,6 +24,7 @@ export default function Nav({ session }: { session: Session }) {
         <span className="mr-2 font-semibold">ResearchPilot</span>
         {link("/documents", "Documents")}
         {link("/chat", "Chat")}
+        {link("/study", "Study")}
       </nav>
       <div className="flex items-center gap-3 text-sm text-zinc-500">
         <span>{session.email}</span>

@@ -21,6 +21,7 @@ describe("parseFrame", () => {
       standaloneQuery: "",
       closest: [],
       degraded: [],
+      stopped: null,
     });
     expect(parseFrame('event: error\ndata: {"message": "boom"}')).toEqual({ type: "error", message: "boom" });
   });
@@ -35,6 +36,15 @@ describe("parseFrame", () => {
       'event: done\ndata: {"answer": "A", "conversation_id": "c", "message_id": "m", "standalone_query": "what is X", "degraded": ["rerank"]}',
     );
     expect(done).toMatchObject({ standaloneQuery: "what is X", degraded: ["rerank"] });
+  });
+
+  it("parses tool events", () => {
+    const frame =
+      'event: tool\ndata: {"id": "t1", "name": "calculator", "input": {"expression": "2+2"}, "status": "finished", "duration_ms": 3, "is_error": false}';
+    expect(parseFrame(frame)).toMatchObject({
+      type: "tool",
+      tool: { id: "t1", name: "calculator", status: "finished", duration_ms: 3 },
+    });
   });
 
   it("returns null for unknown or empty frames", () => {

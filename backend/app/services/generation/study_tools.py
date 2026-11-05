@@ -14,7 +14,7 @@ import re
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
@@ -43,6 +43,7 @@ class Section:
     page_start: int
     page_end: int
     text: str
+    bbox_list: tuple[Any, ...] = ()  # where the text sits on the page (children only)
 
 
 # --- sampling --------------------------------------------------------------------------------
@@ -164,6 +165,7 @@ async def generate_quiz(
                 "chunk_id": str(src.chunk_id),
                 "page_start": src.page_start,
                 "page_end": src.page_end,
+                "bbox_list": list(src.bbox_list),
             }
         )
     return GeneratedQuiz(questions, num_questions, attempts)
@@ -195,6 +197,7 @@ async def generate_flashcards(
                 "chunk_id": str(src.chunk_id),
                 "page_start": src.page_start,
                 "page_end": src.page_end,
+                "bbox_list": list(src.bbox_list),
             }
         )
     return GeneratedCards(cards, num_cards, attempts)

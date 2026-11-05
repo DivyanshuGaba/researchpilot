@@ -33,8 +33,12 @@ SAFE_GENERATION_ERROR = "The model could not produce a valid result. Please try 
 SAFE_UPSTREAM_ERROR = "The model could not be reached. Please try again."
 
 
-def _load(deps: Deps, user_id: uuid.UUID, document_id: uuid.UUID) -> tuple[uuid.UUID, list[Section]]:
-    """Latest ready version's section (parent chunk) texts. RLS makes other tenants' ids 404."""
+def _load(
+    deps: Deps, user_id: uuid.UUID, document_id: uuid.UUID, level: str = "parent"
+) -> tuple[uuid.UUID, list[Section]]:
+    """Latest ready version's passages. Summaries use parent chunks (sections); quizzes and
+    flashcards use child chunks, which never span pages, so a cited page is exact and the
+    source can be highlighted. RLS makes other tenants' ids a 404."""
     with deps.open_session(user_id) as s:
         doc = s.get(Document, document_id)
         if doc is None:
@@ -50,10 +54,12 @@ def _load(deps: Deps, user_id: uuid.UUID, document_id: uuid.UUID) -> tuple[uuid.
             raise HTTPException(409, "document has no indexed content")
         rows = s.scalars(
             select(Chunk)
-            .where(Chunk.version_id == version.id, Chunk.level == "parent")
+            .where(Chunk.version_id == version.id, Chunk.level == level)
             .order_by(Chunk.chunk_index)
         ).all()
-        sections = [Section(c.id, c.page_start, c.page_end, c.content) for c in rows]
+        sections = [
+            Section(c.id, c.page_start, c.page_end, c.content, tuple(c.bbox_list or [])) for c in rows
+        ]
     if not sections:
         raise HTTPException(409, "document has no indexed content")
     return version.id, sections
@@ -91,7 +97,9 @@ def _cards_out(row: FlashcardSet) -> FlashcardSetOut:
 async def create_quiz(
     body: QuizRequest, user_id: uuid.UUID = Depends(current_user_id), deps: Deps = Depends(chat_deps)
 ) -> QuizOut:
-    version_id, sections = await run_in_threadpool(_load, deps, user_id, body.document_id)
+    version_id, sections = await run_in_threadpool(
+        _load, deps, user_id, body.document_id, "child"
+    )
     try:
         gen = await generate_quiz(deps.llm, deps.settings, sections, body.num_questions)
     except StudyGenerationError as exc:
@@ -139,7 +147,9 @@ async def create_flashcards(
     user_id: uuid.UUID = Depends(current_user_id),
     deps: Deps = Depends(chat_deps),
 ) -> FlashcardSetOut:
-    version_id, sections = await run_in_threadpool(_load, deps, user_id, body.document_id)
+    version_id, sections = await run_in_threadpool(
+        _load, deps, user_id, body.document_id, "child"
+    )
     try:
         gen = await generate_flashcards(deps.llm, deps.settings, sections, body.num_cards)
     except StudyGenerationError as exc:

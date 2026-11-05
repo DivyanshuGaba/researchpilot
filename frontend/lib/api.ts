@@ -146,8 +146,18 @@ export type Closest = {
   score: number;
 };
 
+export type ToolInfo = {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+  status: "started" | "finished";
+  duration_ms?: number;
+  is_error?: boolean;
+};
+
 export type ChatEvent =
   | { type: "status"; stage: string }
+  | { type: "tool"; tool: ToolInfo }
   | { type: "token"; text: string }
   | { type: "citation"; citation: Citation }
   | { type: "closest"; passages: Closest[] }
@@ -159,6 +169,7 @@ export type ChatEvent =
       standaloneQuery: string;
       closest: Closest[];
       degraded: string[];
+      stopped: string | null;
     }
   | { type: "error"; message: string };
 
@@ -168,7 +179,7 @@ export async function streamChat(
     question: string;
     conversation_id?: string;
     document_ids?: string[];
-    mode?: "qa" | "compare";
+    mode?: "qa" | "compare" | "agent";
   },
   onEvent: (e: ChatEvent) => void,
   signal: AbortSignal,
@@ -221,6 +232,8 @@ export function parseFrame(frame: string): ChatEvent | null {
       return { type: "token", text: d.text };
     case "citation":
       return { type: "citation", citation: d as Citation };
+    case "tool":
+      return { type: "tool", tool: d as ToolInfo };
     case "closest":
       return { type: "closest", passages: d.passages as Closest[] };
     case "done":
@@ -232,6 +245,7 @@ export function parseFrame(frame: string): ChatEvent | null {
         standaloneQuery: d.standalone_query ?? "",
         closest: (d.closest ?? []) as Closest[],
         degraded: d.degraded ?? [],
+        stopped: d.stopped ?? null,
       };
     case "error":
       return { type: "error", message: d.message };
@@ -239,3 +253,51 @@ export function parseFrame(frame: string): ChatEvent | null {
       return null;
   }
 }
+
+// --- study ---------------------------------------------------------------------------------
+
+export type QuizQuestion = {
+  question: string;
+  options: string[];
+  answer_index: number;
+  explanation: string;
+  chunk_id: string;
+  page_start: number;
+  page_end: number;
+  bbox_list: BBox[];
+};
+export type Quiz = { id: string; document_id: string; requested: number; questions: QuizQuestion[] };
+
+export type Card = {
+  front: string;
+  back: string;
+  chunk_id: string;
+  page_start: number;
+  page_end: number;
+  bbox_list: BBox[];
+};
+export type CardSet = { id: string; document_id: string; requested: number; cards: Card[] };
+
+export type Summary = {
+  document_id: string;
+  summary: string;
+  cached: boolean;
+  sections: number;
+  truncated: boolean;
+};
+
+async function post<T>(path: string, body: unknown): Promise<T> {
+  return json(
+    await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: headers({ "content-type": "application/json" }),
+      body: JSON.stringify(body),
+    }),
+  );
+}
+
+export const createQuiz = (document_id: string, num_questions: number) =>
+  post<Quiz>("/study/quizzes", { document_id, num_questions });
+export const createFlashcards = (document_id: string, num_cards: number) =>
+  post<CardSet>("/study/flashcards", { document_id, num_cards });
+export const createSummary = (document_id: string) => post<Summary>("/study/summaries", { document_id });

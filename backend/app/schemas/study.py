@@ -80,6 +80,7 @@ class QuizQuestionOut(BaseModel):
     chunk_id: uuid.UUID
     page_start: int
     page_end: int
+    bbox_list: list[Any] = []
 
 
 class QuizOut(BaseModel):
@@ -96,6 +97,7 @@ class CardOut(BaseModel):
     chunk_id: uuid.UUID
     page_start: int
     page_end: int
+    bbox_list: list[Any] = []
 
 
 class FlashcardSetOut(BaseModel):

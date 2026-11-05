@@ -1,6 +1,6 @@
 "use client";
 
-import type { Citation, Closest } from "@/lib/api";
+import type { Citation, Closest, ToolInfo } from "@/lib/api";
 import { segmentAnswer } from "@/lib/citations";
 
 export type ChatMsg = {
@@ -15,6 +15,8 @@ export type ChatMsg = {
   closest?: Closest[];
   standalone?: string; // the rewritten search query, shown when it differs from the question
   question?: string;
+  tools?: ToolInfo[];
+  stopped_reason?: string | null; // agent stopped early (limit hit)
 };
 
 type Props = {
@@ -37,6 +39,20 @@ export default function ChatMessage({ msg, onCite, onClosest, activeChunk }: Pro
   const segments = segmentAnswer(msg.content, msg.citations, !!msg.streaming);
   return (
     <div className="max-w-[90%] space-y-2">
+      {msg.tools && msg.tools.length > 0 && (
+        <ul className="space-y-1 text-xs text-zinc-500" aria-label="Tool calls">
+          {msg.tools.map((t) => (
+            <li key={t.id} className="flex items-start gap-1.5">
+              <span aria-hidden>{t.status === "started" ? "⏳" : t.is_error ? "⚠️" : "✓"}</span>
+              <span>
+                <span className="font-mono">{t.name}</span>
+                <span className="text-zinc-400"> {toolSummary(t)}</span>
+                {t.duration_ms !== undefined && <span className="text-zinc-400"> · {t.duration_ms} ms</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
       <p className="whitespace-pre-wrap leading-relaxed">
         {segments.map((s, i) =>
           s.kind === "text" ? (
@@ -101,4 +117,9 @@ export default function ChatMessage({ msg, onCite, onClosest, activeChunk }: Pro
       {msg.error && <p className="text-sm text-red-600">{msg.error}</p>}
     </div>
   );
+}
+
+function toolSummary(t: ToolInfo): string {
+  const v = t.input.query ?? t.input.expression ?? t.input.url;
+  return typeof v === "string" ? `“${v.length > 70 ? v.slice(0, 70) + "…" : v}”` : "";
 }

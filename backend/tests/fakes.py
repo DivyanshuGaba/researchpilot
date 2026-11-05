@@ -78,6 +78,7 @@ class FakeLLM:
         self.summaries = []
         self.script, self.converse_requests, self.delay = [], [], 0.0
         self.handler = None
+        self.stop_reason = ""
 
     async def complete(self, req: LLMRequest) -> LLMResponse:
         if self.handler is not None:  # study tests: full control over every reply
@@ -90,13 +91,13 @@ class FakeLLM:
             self.rewrites.append(req)
             return LLMResponse(self.rewrite, 5, 5)
         self.requests.append(req)
-        return LLMResponse(self.text, 100, 20)
+        return LLMResponse(self.text, 100, 20, self.stop_reason)
 
     async def stream(self, req: LLMRequest):
         self.requests.append(req)
-        for word in self.text.split(" "):
+        for word in (self.text.split(" ") if self.text else []):
             yield LLMEvent("delta", text=word + " ")
-        yield LLMEvent("usage", input_tokens=100, output_tokens=20)
+        yield LLMEvent("usage", input_tokens=100, output_tokens=20, stop_reason=self.stop_reason)
 
 
 class FakeSession:
@@ -136,15 +137,15 @@ def make_deps(store=None, llm=None, reranker="default", session=None, settings=N
     return deps, session
 
 
-def tool_turn(*calls, text="", tokens=(10, 5)):
+def tool_turn(*calls, text="", tokens=(10, 5), stop_reason=""):
     """A scripted model turn that calls tools: tool_turn(("calculator", {"expression": "1+1"}))."""
     tcs = [ToolCall(f"tu_{i}_{n}", n, a) for i, (n, a) in enumerate(calls)]
     blocks = [{"type": "tool_use", "id": c.id, "name": c.name, "input": c.input} for c in tcs]
-    return ToolTurn(text, tcs, blocks, *tokens)
+    return ToolTurn(text, tcs, blocks, *tokens, stop_reason)
 
 
-def text_turn(text, tokens=(10, 5)):
-    return ToolTurn(text, [], [{"type": "text", "text": text}], *tokens)
+def text_turn(text, tokens=(10, 5), stop_reason=""):
+    return ToolTurn(text, [], [{"type": "text", "text": text}] if text else [], *tokens, stop_reason)
 
 
 async def _converse(self, req: ConverseRequest) -> ToolTurn:

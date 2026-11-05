@@ -417,6 +417,29 @@ def test_quiz_flow_persists_isolates_tenants_and_handles_errors(tmp_path):
         app.dependency_overrides.clear()
 
 
+def test_quiz_sources_are_exact_pages_with_highlight_boxes(tmp_path):
+    """Questions come from child chunks, so the cited page is the page the passage is on."""
+    from .fakes import FakeLLM
+
+    qs = [
+        {"question": f"Question {i} about the passage?", "options": ["A1", "B2", "C3", "D4"],
+         "answer_index": 1, "explanation": "Because.", "source": f"s_{i}"}
+        for i in (1, 2, 3)
+    ]
+    llm = FakeLLM()
+    llm.handler = lambda req: json.dumps({"questions": qs})
+    client, h, doc_id = _study_setup(tmp_path, llm)
+    try:
+        quiz = client.post("/study/quizzes", headers=h, json={"document_id": doc_id, "num_questions": 3}).json()
+        assert [q["page_start"] for q in quiz["questions"]] == [1, 2, 3]  # one passage per page
+        assert all(q["page_start"] == q["page_end"] for q in quiz["questions"])
+        assert all(q["bbox_list"] and q["bbox_list"][0]["page"] == q["page_start"] for q in quiz["questions"])
+        # the passage the model saw for s_3 really is the page 3 text
+        assert "Photosynthesis" in llm.requests[0].user.split('<passage id="s_3"')[1]
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_study_requires_a_ready_document(tmp_path):
     from .fakes import FakeLLM
 

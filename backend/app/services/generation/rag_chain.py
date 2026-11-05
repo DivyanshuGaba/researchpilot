@@ -9,6 +9,7 @@ from app.services.generation.llm_client import LLMClient, LLMRequest
 from app.services.generation.prompts import (
     INSUFFICIENT_CONTEXT_MESSAGE,
     build_user_message,
+    empty_answer_message,
     get_system_prompt,
     render_document_block,
     render_source,
@@ -166,6 +167,10 @@ async def answer_question(
         return _refusal(turn)  # no LLM call: nothing relevant to ground an answer in
     request, by_marker = _prepare(turn, settings, config)
     resp = await llm.complete(request)
+    if not resp.text.strip():
+        return RagAnswer(
+            empty_answer_message(resp.stop_reason), [], [], resp.input_tokens, resp.output_tokens
+        )
     text, citations = validate_citations(resp.text, by_marker)
     return RagAnswer(text, citations, [], resp.input_tokens, resp.output_tokens)
 
@@ -188,12 +193,18 @@ async def stream_answer(
     yield StreamEvent("status", {"stage": "writing"})
     raw: list[str] = []
     in_tokens = out_tokens = 0
+    stop_reason = ""
     async for ev in llm.stream(request):
         if ev.kind == "delta":
             raw.append(ev.text)
             yield StreamEvent("token", {"text": ev.text})
         elif ev.kind == "usage":
-            in_tokens, out_tokens = ev.input_tokens, ev.output_tokens
+            in_tokens, out_tokens, stop_reason = ev.input_tokens, ev.output_tokens, ev.stop_reason
+    if not "".join(raw).strip():
+        message = empty_answer_message(stop_reason)
+        yield StreamEvent("token", {"text": message})
+        yield RagAnswer(message, [], [], in_tokens, out_tokens)
+        return
     text, citations = validate_citations("".join(raw), by_marker)
     for c in citations:
         yield StreamEvent("citation", c.to_json())

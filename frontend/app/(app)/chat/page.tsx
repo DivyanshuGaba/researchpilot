@@ -16,6 +16,7 @@ type Viewer = { citation: Citation; nonce: number };
 
 const STAGE_LABEL: Record<string, string> = {
   rewriting: "Understanding your question",
+  agent: "Working on it",
   searching: "Searching your documents",
   reranking: "Ranking passages",
   writing: "Writing",
@@ -29,6 +30,7 @@ export default function ChatPage() {
   const [busy, setBusy] = useState(false);
   const [viewer, setViewer] = useState<Viewer | null>(null);
   const [compare, setCompare] = useState(false);
+  const [agent, setAgent] = useState(false);
   const conversationId = useRef<string | undefined>(undefined);
   const abort = useRef<AbortController | null>(null);
   const nextId = useRef(0);
@@ -55,6 +57,13 @@ export default function ChatPage() {
       case "closest":
         patchLast((m) => ({ ...m, closest: e.passages }));
         break;
+      case "tool":
+        patchLast((m) => {
+          const tools = m.tools ?? [];
+          const i = tools.findIndex((t) => t.id === e.tool.id);
+          return { ...m, tools: i < 0 ? [...tools, e.tool] : tools.map((t, k) => (k === i ? e.tool : t)) };
+        });
+        break;
       case "token":
         patchLast((m) => ({ ...m, content: m.content + e.text }));
         break;
@@ -70,6 +79,7 @@ export default function ChatPage() {
           streaming: false,
           closest: e.closest.length ? e.closest : m.closest,
           standalone: e.standaloneQuery,
+          stopped_reason: e.stopped,
         }));
         break;
       case "error":
@@ -104,7 +114,7 @@ export default function ChatPage() {
           question,
           conversation_id: conversationId.current,
           document_ids: scope.size ? [...scope] : undefined,
-          mode: compareOn ? "compare" : "qa",
+          mode: agent ? "agent" : compareOn ? "compare" : "qa",
         },
         onEvent,
         controller.signal,
@@ -123,7 +133,7 @@ export default function ChatPage() {
   }
 
   // Compare needs at least two selected documents; it silently reverts to Q&A below that.
-  const compareOn = compare && scope.size >= 2;
+  const compareOn = compare && !agent && scope.size >= 2;
 
   const toggle = (id: string) =>
     setScope((s) => {
@@ -167,7 +177,21 @@ export default function ChatPage() {
             ))}
             {scope.size === 0 && <span className="text-zinc-500">(all documents)</span>}
             <label
-              className={`ml-auto flex items-center gap-1.5 ${
+              className="ml-auto flex cursor-pointer items-center gap-1.5"
+              title="Let the assistant call tools: search your documents several times, do arithmetic, fetch a URL you give it"
+            >
+              <input
+                type="checkbox"
+                checked={agent}
+                onChange={(e) => {
+                  setAgent(e.target.checked);
+                  if (e.target.checked) setCompare(false);
+                }}
+              />
+              Agent
+            </label>
+            <label
+              className={`flex items-center gap-1.5 ${
                 scope.size >= 2 ? "cursor-pointer" : "cursor-not-allowed opacity-50"
               }`}
               title={scope.size >= 2 ? "Retrieve from each selected document and compare" : "Select two or more documents to compare"}
@@ -175,7 +199,7 @@ export default function ChatPage() {
               <input
                 type="checkbox"
                 checked={compareOn}
-                disabled={scope.size < 2}
+                disabled={scope.size < 2 || agent}
                 onChange={(e) => setCompare(e.target.checked)}
               />
               Compare

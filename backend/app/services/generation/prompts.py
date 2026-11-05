@@ -133,6 +133,14 @@ WRAP_UP_NUDGE = (
     "anything you could not determine."
 )
 
+def empty_answer_message(stop_reason: str) -> str:
+    """Shown when the model returns no text (for example a safety refusal, which comes back as
+    stop_reason "refusal" with no content at all)."""
+    if stop_reason == "refusal":
+        return "The model declined to answer this request."
+    return "The model didn't return an answer. Try rephrasing your question."
+
+
 SYSTEM_PROMPTS: dict[str, dict[str, str]] = {
     "qa": {"v1": SYSTEM_PROMPT_V1, "v2": SYSTEM_PROMPT_V2},
     "compare": {"v1": COMPARE_PROMPT_V1, "v2": COMPARE_PROMPT_V1},

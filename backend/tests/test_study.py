@@ -23,7 +23,11 @@ SETTINGS = Settings(llm_model="big-model")
 
 
 def sections(n: int) -> list[Section]:
-    return [Section(uuid.uuid4(), i + 1, i + 1, f"Section {i + 1} text about topic {i + 1}.") for i in range(n)]
+    return [
+        Section(uuid.uuid4(), i + 1, i + 1, f"Section {i + 1} text about topic {i + 1}.",
+                ({"page": i + 1, "bbox": [1, 2, 3, 4]},))
+        for i in range(n)
+    ]
 
 
 def q(source="s_1", **kw):
@@ -96,6 +100,7 @@ async def test_quiz_maps_each_question_to_its_source_chunk_and_pages():
     assert quiz.attempts == 1 and len(quiz.questions) == 2
     assert quiz.questions[0]["chunk_id"] == str(picked[0].chunk_id)
     assert quiz.questions[0]["page_start"] == picked[0].page_start
+    assert quiz.questions[0]["bbox_list"] == [{"page": picked[0].page_start, "bbox": [1, 2, 3, 4]}]
     assert quiz.questions[1]["chunk_id"] == str(picked[1].chunk_id)  # s_2 maps to the 2nd passage
     req = llm.requests[0]
     assert req.model == "big-model" and "untrusted data" in req.system

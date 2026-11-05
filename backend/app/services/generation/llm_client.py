@@ -18,6 +18,7 @@ class LLMResponse:
     text: str
     input_tokens: int
     output_tokens: int
+    stop_reason: str = ""
 
 
 @dataclass
@@ -28,6 +29,7 @@ class LLMEvent:
     text: str = ""
     input_tokens: int = 0
     output_tokens: int = 0
+    stop_reason: str = ""
 
 
 @dataclass
@@ -56,6 +58,7 @@ class ToolTurn:
     content_blocks: list[dict[str, Any]] = field(default_factory=list)  # replay as assistant turn
     input_tokens: int = 0
     output_tokens: int = 0
+    stop_reason: str = ""
 
 
 class LLMClient(Protocol):
@@ -85,7 +88,10 @@ class AnthropicClient:
                 yield LLMEvent("delta", text=delta)
             final = await stream.get_final_message()
         yield LLMEvent(
-            "usage", input_tokens=final.usage.input_tokens, output_tokens=final.usage.output_tokens
+            "usage",
+            input_tokens=final.usage.input_tokens,
+            output_tokens=final.usage.output_tokens,
+            stop_reason=final.stop_reason or "",
         )
 
     async def complete(self, req: LLMRequest) -> LLMResponse:
@@ -96,7 +102,9 @@ class AnthropicClient:
             messages=[{"role": "user", "content": req.user}],
         )
         text = "".join(b.text for b in msg.content if b.type == "text")
-        return LLMResponse(text, msg.usage.input_tokens, msg.usage.output_tokens)
+        return LLMResponse(
+            text, msg.usage.input_tokens, msg.usage.output_tokens, msg.stop_reason or ""
+        )
 
     async def converse(self, req: ConverseRequest) -> ToolTurn:
         extra: dict[str, Any] = {"tools": req.tools} if req.tools else {}
@@ -121,5 +129,6 @@ class AnthropicClient:
                 blocks.append({"type": "tool_use", "id": b.id, "name": b.name, "input": inp})
                 calls.append(ToolCall(b.id, b.name, inp))
         return ToolTurn(
-            "".join(text_parts), calls, blocks, msg.usage.input_tokens, msg.usage.output_tokens
+            "".join(text_parts), calls, blocks, msg.usage.input_tokens, msg.usage.output_tokens,
+            msg.stop_reason or "",
         )
