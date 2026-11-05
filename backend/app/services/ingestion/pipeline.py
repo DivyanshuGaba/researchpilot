@@ -7,25 +7,17 @@ from sqlalchemy.orm import Session
 from app.config import PipelineConfig
 from app.models import Chunk, Document, DocumentVersion, IngestionJob
 from app.services.embeddings import Embedder
+from app.services.guardrails import scan_injection
 from app.services.ingestion.chunkers import get_chunker
 from app.services.ingestion.parsers import ParseError, parse
 from app.services.vectorstore import PgVectorStore
 
 log = logging.getLogger(__name__)
 
-INJECTION_PATTERNS = (
-    "ignore previous instructions",
-    "ignore all previous instructions",
-    "disregard the above",
-    "you are now",
-    "system prompt",
-)
 
-
-def flag_injection(text: str) -> bool:
-    lowered = text.lower()
-    return any(p in lowered for p in INJECTION_PATTERNS)
-
+def _injection_meta(text: str) -> dict[str, object]:
+    found = scan_injection(text)
+    return {"injection_flag": bool(found), "injection_patterns": found}
 
 def _stage(session: Session, version: DocumentVersion, doc: Document, stage: str) -> None:
     version.status = stage
@@ -88,7 +80,7 @@ def ingest_version(
                     token_count=d.token_count,
                     embedding=vec_by_child.get(id(d)),
                     embedding_model_id=embedder.model_id if is_child else None,
-                    meta={"injection_flag": flag_injection(d.text)},
+                    meta=_injection_meta(d.text),
                 )
             )
         session.flush()

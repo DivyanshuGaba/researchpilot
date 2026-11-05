@@ -14,6 +14,7 @@ from app.services.generation.prompts import (
     render_document_block,
     render_source,
 )
+from app.services.guardrails import sanitize_output
 from app.services.ingestion.types import count_tokens
 from app.services.turn import Group, Turn
 from app.services.vectorstore import Hit
@@ -86,7 +87,9 @@ def _pack_group(
         used += cost
         marker = f"c_{len(by_marker) + 1}"
         by_marker[marker] = hit
-        rendered.append(render_source(marker, hit.document_title, hit.page_start, hit.parent_text))
+        rendered.append(
+            render_source(marker, hit.document_title, hit.page_start, hit.parent_text, hit.flagged)
+        )
     return rendered
 
 
@@ -172,6 +175,7 @@ async def answer_question(
             empty_answer_message(resp.stop_reason), [], [], resp.input_tokens, resp.output_tokens
         )
     text, citations = validate_citations(resp.text, by_marker)
+    text = sanitize_output(text)
     return RagAnswer(text, citations, [], resp.input_tokens, resp.output_tokens)
 
 
@@ -206,6 +210,7 @@ async def stream_answer(
         yield RagAnswer(message, [], [], in_tokens, out_tokens)
         return
     text, citations = validate_citations("".join(raw), by_marker)
+    text = sanitize_output(text)
     for c in citations:
         yield StreamEvent("citation", c.to_json())
     yield RagAnswer(text, citations, [], in_tokens, out_tokens)

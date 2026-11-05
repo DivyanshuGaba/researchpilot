@@ -11,6 +11,7 @@ import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
+from urllib.parse import urlparse
 
 from app.config import Settings
 from app.services.generation.llm_client import ConverseRequest, LLMClient, ToolCall
@@ -21,6 +22,7 @@ from app.services.generation.prompts import (
 )
 from app.services.generation.rag_chain import Citation, StreamEvent, validate_citations
 from app.services.generation.tools import ToolBox, ToolResult
+from app.services.guardrails import redact_secrets, sanitize_output
 from app.services.vectorstore import Hit
 
 log = logging.getLogger(__name__)
@@ -57,7 +59,7 @@ STOP_NOTES = {
 
 
 def _preview(args: dict[str, Any]) -> dict[str, Any]:
-    return {k: (v[:200] if isinstance(v, str) else v) for k, v in args.items()}
+    return {k: (redact_secrets(v[:200]) if isinstance(v, str) else v) for k, v in args.items()}
 
 
 def _append_user_text(messages: list[dict[str, Any]], text: str) -> None:
@@ -155,6 +157,13 @@ async def run_agent(
         final = f"{body}\n\n(Stopped early: {note}, so this answer may be incomplete.)"
 
     result.answer, result.citations = validate_citations(final, by_marker)
+    fetched = {
+        (urlparse(str(t["input"].get("url", ""))).hostname or "").lower()
+        for t in result.tool_log
+        if t["name"] == "fetch_url" and not t["is_error"]
+    }
+    # Links survive only to pages the agent was actually asked to fetch.
+    result.answer = sanitize_output(result.answer, fetched - {""})
     log.info(
         "agent done: tools=%d stopped=%s tokens=%d",
         len(result.tool_log), result.stopped, result.input_tokens + result.output_tokens,

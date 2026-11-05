@@ -28,7 +28,7 @@ class PipelineConfig(BaseModel, frozen=True):
     summary_max_sections: int = 150
     summary_concurrency: int = 5
     summary_reduce_tokens: int = 6000
-    prompt_version: str = "v2"
+    prompt_version: str = "v3"
 
 
 # USD per million tokens (cached: 2026-10-06, Anthropic first-party API). Cache reads cost 0.1x

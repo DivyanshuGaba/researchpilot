@@ -29,6 +29,7 @@ class Hit:
     parent_text: str
     bbox_list: list[Any] = field(default_factory=list)
     child_id: uuid.UUID | None = None
+    flagged: bool = False  # the passage the model will read looks like an injection attempt
 
     @property
     def key(self) -> uuid.UUID:
@@ -61,14 +62,13 @@ class PgVectorStore:
 
     def _to_hits(self, rows: list[Any]) -> list[Hit]:
         parent_ids = {c.parent_id for c, _, _ in rows if c.parent_id}
-        parents = (
-            {
-                p.id: p.content
-                for p in self.session.scalars(select(Chunk).where(Chunk.id.in_(parent_ids)))
-            }
+        parent_rows = (
+            {p.id: p for p in self.session.scalars(select(Chunk).where(Chunk.id.in_(parent_ids)))}
             if parent_ids
             else {}
         )
+        parents = {pid: p.content for pid, p in parent_rows.items()}
+        parent_flag = {pid: bool((p.meta or {}).get("injection_flag")) for pid, p in parent_rows.items()}
         return [
             Hit(
                 chunk_id=c.parent_id or c.id,
@@ -81,6 +81,9 @@ class PgVectorStore:
                 child_text=c.content,
                 parent_text=parents.get(c.parent_id, c.content) if c.parent_id else c.content,
                 bbox_list=list(c.bbox_list or []),
+                flagged=parent_flag.get(c.parent_id, bool((c.meta or {}).get("injection_flag")))
+                if c.parent_id
+                else bool((c.meta or {}).get("injection_flag")),
             )
             for c, title, score in rows
         ]
