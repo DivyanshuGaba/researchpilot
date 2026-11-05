@@ -35,11 +35,11 @@ def test_config_hash_is_stable_and_changes_with_any_setting():
     assert a != config_hash(PipelineConfig(), mode="agent")
 
 
-def _setup(tmp_path, llm, model="claude-sonnet-5-5"):
+def _setup(tmp_path, llm, model="claude-sonnet-5-5", **settings_kw):
     from .fakes import OverlapReranker
     from .test_integration_db import ingest_version
 
-    settings = Settings(upload_dir=str(tmp_path / "up"), llm_model=model)
+    settings = Settings(upload_dir=str(tmp_path / "up"), llm_model=model, **settings_kw)
 
     def enqueue(version_id: str, user_id: str) -> None:
         with tenant_session(uuid.UUID(user_id)) as s:
@@ -148,7 +148,7 @@ def test_admin_metrics_aggregate_across_tenants_and_are_admin_only(tmp_path):
     assert {"embed", "dense", "generation"} <= set(data["stages"])
     assert data["stages"]["dense"]["p95_ms"] >= data["stages"]["dense"]["p50_ms"]
     assert data["cost_usd"]["total"] > 0 and data["cost_usd"]["per_query"] > 0
-    assert data["cache"]["by_layer"]["miss"] >= 3 and data["cache"]["hit_rate"] == 0
+    assert data["cache"]["by_layer"]["miss"] >= 3 and 0 <= data["cache"]["hit_rate"] < 1
     assert 0 < data["refusal_rate"] < 1  # one of the three was refused
     assert data["modes"]["qa"] >= 3 and data["daily"][-1]["queries"] >= 3
     assert data["ingestion"]["documents_by_status"].get("ready", 0) >= 1

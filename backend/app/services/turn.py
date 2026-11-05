@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Any
 
 from app.services.vectorstore import Hit
 
@@ -25,3 +26,8 @@ class Turn:
     top_score: float | None = None
     timings_ms: dict[str, int] = field(default_factory=dict)
     degraded: list[str] = field(default_factory=list)
+    # response cache
+    cached: dict[str, Any] | None = None  # a hit: the stored answer payload
+    cache_status: str = "miss"  # miss | exact | semantic
+    cache_keys: tuple[str, str] | None = None  # (exact key, semantic key) for storing later
+    cache_vec: list[float] | None = None

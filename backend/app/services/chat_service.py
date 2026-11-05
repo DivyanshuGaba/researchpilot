@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.models import Conversation, Document, Message
 from app.services import memory
+from app.services.cache import RedisCache, docset_hash
 from app.services.embeddings import Embedder
 from app.services.generation.agent import AgentLimits, AgentResult, run_agent
 from app.services.generation.llm_client import LLMClient, LLMUnavailable, Usage
@@ -36,7 +37,7 @@ from app.services.generation.rag_chain import (
 )
 from app.services.generation.tools import ToolBox
 from app.services.limits import Limiter
-from app.services.observability import QueryRecord, Tracer, config_hash, write_query_log
+from app.services.observability import QueryRecord, Tracer, pipeline_hash, write_query_log
 from app.services.retrieval.query_rewrite import rewrite_query
 from app.services.retrieval.reranker import Reranker
 from app.services.retrieval.service import Retrieval, finalize, gather_candidates
@@ -86,6 +87,7 @@ class Deps:
     llm: LLMClient
     settings: Settings
     limiter: Limiter | None = None
+    cache: RedisCache | None = None
 
 
 def validate_request(question: str, mode: str, document_ids: tuple[uuid.UUID, ...] | None) -> None:
@@ -177,6 +179,9 @@ async def prepare_turn(
     if used_llm or turn.standalone != question:
         turn.timings_ms["rewrite"] = _ms(t)
 
+    if await _cache_lookup(deps, user_id, document_ids, mode, turn):
+        return turn  # answered from cache: no retrieval, no model call
+
     await on_status("searching")
     if mode == "compare":
         assert document_ids is not None
@@ -200,6 +205,65 @@ async def prepare_turn(
     _merge(turn.timings_ms, result.timings_ms)
     turn.degraded.extend(result.degraded)
     return turn
+
+
+async def _cache_lookup(
+    deps: Deps, user_id: uuid.UUID, document_ids: tuple[uuid.UUID, ...] | None, mode: str, turn: Turn
+) -> bool:
+    """Exact, then semantic cache. Keys carry the user, the document-set version and the full
+    pipeline hash, so a changed document or setting can never serve a stale answer."""
+    cache = deps.cache
+    if cache is None or not cache.enabled or mode not in ("qa", "compare"):
+        return False
+    t = time.perf_counter()
+
+    def run() -> tuple[tuple[str, str], list[float], tuple[str, dict[str, Any], float] | None]:
+        with deps.open_session(user_id) as s:
+            docset = docset_hash(s, user_id, document_ids)
+        cfg = pipeline_hash(deps.settings, mode)
+        exact = cache.exact_key(user_id, docset, cfg, mode, turn.standalone)
+        sem = cache.semantic_key(user_id, docset, cfg, mode)
+        vec = deps.embedder.embed_query(turn.standalone)
+        hit = cache.lookup(exact, sem, vec, deps.settings.semantic_cache_threshold)
+        return (exact, sem), vec, hit
+
+    try:
+        keys, vec, hit = await run_in_threadpool(run)
+    except Exception:
+        log.exception("cache lookup failed (ignored)")
+        return False
+    turn.timings_ms["cache"] = _ms(t)
+    turn.cache_keys, turn.cache_vec = keys, vec
+    if hit is None:
+        return False
+    layer, payload, _sim = hit
+    turn.cached, turn.cache_status = payload, layer
+    turn.gated = bool(payload.get("gated"))
+    turn.top_score = payload.get("top_score")
+    return True
+
+
+async def maybe_store_cache(deps: Deps, turn: Turn | None, answer: RagAnswer) -> None:
+    """Store a clean answer. Never agent answers, degraded runs, empty or errored answers."""
+    cache = deps.cache
+    if (
+        cache is None or not cache.enabled or turn is None or turn.cache_keys is None
+        or turn.cache_vec is None or turn.cached is not None or turn.mode not in ("qa", "compare")
+        or turn.degraded or not answer.answer.strip() or answer.answer.startswith("The model ")
+    ):
+        return
+    payload = {
+        "answer": answer.answer,
+        "citations": [c.to_json() for c in answer.citations],
+        "closest": answer.closest,
+        "gated": turn.gated,
+        "top_score": turn.top_score,
+    }
+    keys, vec = turn.cache_keys, turn.cache_vec
+    try:
+        await run_in_threadpool(cache.store, keys[0], keys[1], vec, payload)
+    except Exception:
+        log.exception("cache store failed (ignored)")
 
 
 async def _retrieve_compare(
@@ -335,6 +399,7 @@ async def answer_turn(
     except LLMUnavailable as exc:
         raise ChatLLMError(exc, retrieved_passages(turn), turn) from exc
     turn.timings_ms["generation"] = _ms(t)
+    await maybe_store_cache(deps, turn, answer)
     return TurnAnswer(answer, turn_meta(turn), [], turn)
 
 
@@ -354,15 +419,18 @@ async def finish_turn(
     """Query log + optional trace for one finished request. Best effort, never raises."""
     try:
         usage = usage_of(deps)
-        cfg = deps.settings.pipeline
         hits = [h for g in turn.groups for h in g.hits] if turn else []
         rec = QueryRecord(
-            user_id=user_id, mode=mode, config_hash=config_hash(cfg, mode=mode),
+            user_id=user_id, mode=mode, config_hash=pipeline_hash(deps.settings, mode),
             message_id=message_id, conversation_id=conversation_id,
             rewritten_query=(turn.standalone if turn else "") or question,
             retrieved_chunk_ids=[str(h.key) for h in hits],
             top_score=turn.top_score if turn else None,
-            gated=bool(turn and turn.gated), cache_status=cache_status, latency_ms=latency_ms,
+            gated=bool(turn and turn.gated),
+            cache_status=(turn.cache_status if turn and turn.cache_status != "miss" else cache_status)
+            if not (usage.cache_read_tokens and not (turn and turn.cached))
+            else "prompt_cached",
+            latency_ms=latency_ms,
             latency_breakdown=dict(turn.timings_ms) if turn else {},
             tokens_in=usage.input_tokens, tokens_out=usage.output_tokens,
             cache_read_tokens=usage.cache_read_tokens, cost_usd=usage.cost_usd,
@@ -432,6 +500,7 @@ def turn_meta(turn: Turn) -> dict[str, Any]:
         "top_score": None if turn.top_score is None else round(turn.top_score, 3),
         "timings_ms": turn.timings_ms,
         "degraded": turn.degraded,
+        "cache_status": turn.cache_status,
     }
 
 
@@ -511,6 +580,8 @@ async def _produce(
                         partial.append(str(item.data["text"]))
                     await queue.put(sse(item.event, item.data))
             turn.timings_ms["generation"] = _ms(gen_started)
+            if final is not None:
+                await maybe_store_cache(deps, turn, final)
             meta = turn_meta(turn)
         assert final is not None
         usage = usage_of(deps)

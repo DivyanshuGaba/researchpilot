@@ -17,3 +17,14 @@ def _local_limiter(monkeypatch):
     limiter = Limiter(None)
     monkeypatch.setattr("app.api.deps.get_limiter", lambda: limiter)
     return limiter
+
+
+@pytest.fixture(autouse=True)
+def _no_response_cache(monkeypatch):
+    """Caching is off unless a test asks for it, so repeated identical questions in a test
+    exercise the pipeline instead of being served from Redis."""
+    from app.services.cache import RedisCache
+
+    monkeypatch.setattr(
+        "app.api.deps._shared_cache", lambda url, ttl, enabled: RedisCache(url, ttl, False)
+    )

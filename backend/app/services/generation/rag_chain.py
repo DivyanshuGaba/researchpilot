@@ -34,6 +34,14 @@ class Citation:
     quote: str = ""
     bbox_list: list[Any] = field(default_factory=list)
 
+    @classmethod
+    def from_json(cls, d: dict[str, Any]) -> "Citation":
+        return cls(
+            marker=d["marker"], chunk_id=uuid.UUID(d["chunk_id"]), document_id=uuid.UUID(d["document_id"]),
+            document_title=d["document_title"], page_start=d["page_start"], page_end=d["page_end"],
+            quote=d.get("quote", ""), bbox_list=d.get("bbox_list", []),
+        )
+
     def to_json(self) -> dict[str, Any]:
         d = asdict(self)
         d["chunk_id"], d["document_id"] = str(self.chunk_id), str(self.document_id)
@@ -159,6 +167,18 @@ def _refusal(turn: Turn) -> RagAnswer:
     return RagAnswer(INSUFFICIENT_CONTEXT_MESSAGE, closest=closest_json(turn.closest))
 
 
+def cached_answer(turn: Turn) -> RagAnswer | None:
+    """The stored answer when the response cache hit (no retrieval and no model call ran)."""
+    if turn.cached is None:
+        return None
+    p = turn.cached
+    return RagAnswer(
+        str(p["answer"]),
+        [Citation.from_json(c) for c in p.get("citations", [])],
+        list(p.get("closest", [])),
+    )
+
+
 def _has_context(turn: Turn) -> bool:
     return not turn.gated and any(g.hits for g in turn.groups)
 
@@ -166,6 +186,8 @@ def _has_context(turn: Turn) -> bool:
 async def answer_question(
     turn: Turn, llm: LLMClient, settings: Settings, config: PipelineConfig
 ) -> RagAnswer:
+    if (hit := cached_answer(turn)) is not None:
+        return hit
     if not _has_context(turn):
         return _refusal(turn)  # no LLM call: nothing relevant to ground an answer in
     request, by_marker = _prepare(turn, settings, config)
@@ -186,6 +208,14 @@ async def stream_answer(
 
     Raw tokens may contain markers that are later dropped; the final answer is authoritative.
     """
+    if (hit := cached_answer(turn)) is not None:
+        yield StreamEvent("token", {"text": hit.answer})
+        for c in hit.citations:
+            yield StreamEvent("citation", c.to_json())
+        if hit.closest:
+            yield StreamEvent("closest", {"passages": hit.closest})
+        yield hit
+        return
     if not _has_context(turn):
         refusal = _refusal(turn)
         yield StreamEvent("token", {"text": refusal.answer})

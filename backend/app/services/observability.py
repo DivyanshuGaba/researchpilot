@@ -146,3 +146,12 @@ class Tracer:
                 )
         except Exception:  # noqa: BLE001
             log.warning("langfuse export failed (ignored)")
+
+
+def pipeline_hash(settings: Settings, mode: str) -> str:
+    """Hash of everything that can change an answer: pipeline config plus the model, the
+    retrieval threshold, and the embedding and rerank models. Used by caches and query logs."""
+    return config_hash(
+        settings.pipeline, mode=mode, llm=settings.llm_model, min_score=settings.retrieval_min_score,
+        embed=settings.embedding_model, reranker=settings.reranker,
+    )

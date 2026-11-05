@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings, get_settings
 from app.db import tenant_session
 from app.services.auth import AuthError, decode_access_token
+from app.services.cache import CachedEmbedder, RedisCache
 from app.services.chat_service import Deps, SessionOpener, StoreFactory
 from app.services.embeddings import Embedder, get_embedder
 from app.services.generation.llm_client import AnthropicClient, LLMClient, MeteredLLM
@@ -56,8 +57,20 @@ def store_factory_dep() -> StoreFactory:
     return PgVectorStore
 
 
-def embedder_dep(settings: Settings = Depends(settings_dep)) -> Embedder:
-    return get_embedder(settings)
+@lru_cache
+def _shared_cache(url: str, ttl: int, enabled: bool) -> RedisCache:
+    return RedisCache(url, ttl, enabled)
+
+
+def cache_dep(settings: Settings = Depends(settings_dep)) -> RedisCache:
+    return _shared_cache(settings.redis_url, settings.cache_ttl_seconds, settings.cache_enabled)
+
+
+def embedder_dep(
+    settings: Settings = Depends(settings_dep), cache: RedisCache = Depends(cache_dep)
+) -> Embedder:
+    base = get_embedder(settings)
+    return CachedEmbedder(base, cache) if cache.enabled else base
 
 
 @lru_cache
@@ -93,9 +106,10 @@ def chat_deps(
     llm: LLMClient = Depends(llm_dep),
     settings: Settings = Depends(settings_dep),
     limiter: Limiter = Depends(limiter_dep),
+    cache: RedisCache = Depends(cache_dep),
 ) -> Deps:
     # A fresh metered wrapper per request, so usage and cost are per request.
-    return Deps(open_session, make_store, embedder, reranker, MeteredLLM(llm), settings, limiter)
+    return Deps(open_session, make_store, embedder, reranker, MeteredLLM(llm), settings, limiter, cache)
 
 
 async def enforce_rate_limit(
