@@ -10,13 +10,11 @@ from app.api.deps import chat_deps, current_user_id
 from app.services.chat_service import (
     ChatRequestError,
     Deps,
+    answer_turn,
     persist_exchange,
-    prepare_turn,
     stream_chat,
-    turn_meta,
     validate_request,
 )
-from app.services.generation.rag_chain import answer_question
 
 router = APIRouter(tags=["chat"])
 
@@ -25,7 +23,7 @@ class ChatIn(BaseModel):
     question: str
     conversation_id: uuid.UUID | None = None
     document_ids: list[uuid.UUID] | None = None
-    mode: Literal["qa", "compare"] = "qa"
+    mode: Literal["qa", "compare", "agent"] = "qa"
 
     def scope_ids(self) -> tuple[uuid.UUID, ...] | None:
         return tuple(self.document_ids) if self.document_ids else None
@@ -65,13 +63,14 @@ async def chat(
     deps: Deps = Depends(chat_deps),
 ) -> ChatOut:
     _validate(body)
-    turn = await prepare_turn(
+    out = await answer_turn(
         deps, user_id, body.conversation_id, body.question, body.scope_ids(), body.mode
     )
-    result = await answer_question(turn, deps.llm, deps.settings, deps.settings.pipeline)
+    result = out.answer
     conv_id, msg_id = await run_in_threadpool(
         persist_exchange, deps.open_session, user_id, body.conversation_id, body.question,
         result.answer, result.citations, result.input_tokens, result.output_tokens, False,
+        out.tool_calls,
     )
     return ChatOut(
         conversation_id=conv_id,
@@ -79,7 +78,7 @@ async def chat(
         answer=result.answer,
         citations=[CitationOut(**c.__dict__) for c in result.citations],
         closest=result.closest,
-        meta=turn_meta(turn),
+        meta=out.meta,
     )
 
 

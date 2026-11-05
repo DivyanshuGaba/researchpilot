@@ -1,6 +1,6 @@
 from collections.abc import AsyncIterator
-from dataclasses import dataclass
-from typing import Protocol
+from dataclasses import dataclass, field
+from typing import Any, Protocol
 
 from anthropic import AsyncAnthropic
 
@@ -30,9 +30,38 @@ class LLMEvent:
     output_tokens: int = 0
 
 
+@dataclass
+class ToolCall:
+    id: str
+    name: str
+    input: dict[str, Any]
+
+
+@dataclass
+class ConverseRequest:
+    """A multi-message request that may offer tools (used by the agent loop)."""
+
+    system: str
+    messages: list[dict[str, Any]]
+    tools: list[dict[str, Any]]
+    model: str
+    max_tokens: int = 1500
+    tool_choice: dict[str, Any] | None = None  # {"type": "none"} forces a text-only reply
+
+
+@dataclass
+class ToolTurn:
+    text: str
+    tool_calls: list[ToolCall] = field(default_factory=list)
+    content_blocks: list[dict[str, Any]] = field(default_factory=list)  # replay as assistant turn
+    input_tokens: int = 0
+    output_tokens: int = 0
+
+
 class LLMClient(Protocol):
     async def complete(self, req: LLMRequest) -> LLMResponse: ...
     def stream(self, req: LLMRequest) -> AsyncIterator[LLMEvent]: ...
+    async def converse(self, req: ConverseRequest) -> ToolTurn: ...
 
 
 class AnthropicClient:
@@ -68,3 +97,29 @@ class AnthropicClient:
         )
         text = "".join(b.text for b in msg.content if b.type == "text")
         return LLMResponse(text, msg.usage.input_tokens, msg.usage.output_tokens)
+
+    async def converse(self, req: ConverseRequest) -> ToolTurn:
+        extra: dict[str, Any] = {"tools": req.tools} if req.tools else {}
+        if req.tool_choice and req.tools:
+            extra["tool_choice"] = req.tool_choice
+        msg = await self._client.messages.create(
+            model=req.model,
+            max_tokens=req.max_tokens,
+            system=self._system(req),  # type: ignore[arg-type]
+            messages=req.messages,  # type: ignore[arg-type]
+            **extra,
+        )
+        blocks: list[dict[str, Any]] = []
+        calls: list[ToolCall] = []
+        text_parts: list[str] = []
+        for b in msg.content:
+            if b.type == "text":
+                blocks.append({"type": "text", "text": b.text})
+                text_parts.append(b.text)
+            elif b.type == "tool_use":
+                inp = dict(b.input) if isinstance(b.input, dict) else {}
+                blocks.append({"type": "tool_use", "id": b.id, "name": b.name, "input": inp})
+                calls.append(ToolCall(b.id, b.name, inp))
+        return ToolTurn(
+            "".join(text_parts), calls, blocks, msg.usage.input_tokens, msg.usage.output_tokens
+        )

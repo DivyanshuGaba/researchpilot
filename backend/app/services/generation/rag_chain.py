@@ -90,11 +90,18 @@ def _pack_group(
 
 
 def pack_context(
-    groups: list[Group], budget: int, grouped: bool = False
+    groups: list[Group],
+    budget: int,
+    grouped: bool = False,
+    by_marker: dict[str, Hit] | None = None,
+    seen: set[uuid.UUID] | None = None,
 ) -> tuple[list[str], dict[str, Hit]]:
-    """Return rendered source blocks and the marker -> hit map used to validate citations."""
-    by_marker: dict[str, Hit] = {}
-    seen: set[uuid.UUID] = set()
+    """Return rendered source blocks and the marker -> hit map used to validate citations.
+
+    Passing by_marker and seen continues numbering across several calls (the agent searches
+    more than once and every marker must stay unique)."""
+    by_marker = {} if by_marker is None else by_marker
+    seen = set() if seen is None else seen
     per_group = max(1, budget // max(1, len(groups)))
     blocks: list[str] = []
     for g in groups:

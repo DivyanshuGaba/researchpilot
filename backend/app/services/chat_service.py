@@ -23,18 +23,23 @@ from app.config import Settings
 from app.models import Conversation, Document, Message
 from app.services import memory
 from app.services.embeddings import Embedder
+from app.services.generation.agent import AgentLimits, AgentResult, run_agent
 from app.services.generation.llm_client import LLMClient
 from app.services.generation.rag_chain import (
     Citation,
     RagAnswer,
+    StreamEvent,
+    answer_question,
     closest_json,
+    pack_context,
     stream_answer,
 )
+from app.services.generation.tools import ToolBox
 from app.services.retrieval.query_rewrite import rewrite_query
 from app.services.retrieval.reranker import Reranker
 from app.services.retrieval.service import Retrieval, finalize, gather_candidates
 from app.services.turn import Group, Turn
-from app.services.vectorstore import Scope, VectorStore
+from app.services.vectorstore import Hit, Scope, VectorStore
 
 log = logging.getLogger(__name__)
 
@@ -82,18 +87,11 @@ def _merge(into: dict[str, int], more: dict[str, int]) -> None:
         into[k] = into.get(k, 0) + v
 
 
-async def prepare_turn(
-    deps: Deps,
-    user_id: uuid.UUID,
-    conversation_id: uuid.UUID | None,
-    question: str,
-    document_ids: tuple[uuid.UUID, ...] | None,
-    mode: str = "qa",
-    on_status: StatusFn = _no_status,
-) -> Turn:
+async def load_memory(
+    deps: Deps, user_id: uuid.UUID, conversation_id: uuid.UUID | None, turn: Turn
+) -> tuple[memory.HistoryState, str]:
+    """Recent messages verbatim, older ones folded into the rolling summary."""
     cfg = deps.settings.pipeline
-    min_score = deps.settings.retrieval_min_score
-    turn = Turn(question=question, mode=mode)
 
     def load() -> memory.HistoryState:
         with deps.open_session(user_id) as s:
@@ -116,6 +114,23 @@ async def prepare_turn(
 
             await run_in_threadpool(save)
     turn.timings_ms["memory"] = _ms(t)
+    return state, summary
+
+
+async def prepare_turn(
+    deps: Deps,
+    user_id: uuid.UUID,
+    conversation_id: uuid.UUID | None,
+    question: str,
+    document_ids: tuple[uuid.UUID, ...] | None,
+    mode: str = "qa",
+    on_status: StatusFn = _no_status,
+) -> Turn:
+    cfg = deps.settings.pipeline
+    min_score = deps.settings.retrieval_min_score
+    turn = Turn(question=question, mode=mode)
+
+    state, summary = await load_memory(deps, user_id, conversation_id, turn)
     turn.history_text = memory.history_text(summary, state.recent)
 
     t = time.perf_counter()
@@ -186,6 +201,99 @@ async def _retrieve_compare(
     turn.gated = not any(g.hits for g in turn.groups)
 
 
+EmitFn = Callable[[StreamEvent], Awaitable[None]]
+
+
+async def _no_emit(_ev: StreamEvent) -> None:
+    return None
+
+
+async def run_agent_turn(
+    deps: Deps,
+    user_id: uuid.UUID,
+    conversation_id: uuid.UUID | None,
+    question: str,
+    document_ids: tuple[uuid.UUID, ...] | None,
+    emit: EmitFn = _no_emit,
+    http: Any = None,
+    limits: AgentLimits | None = None,
+) -> tuple[AgentResult, Turn]:
+    """Let the model decide which tools to call. Retrieval inside search_documents keeps the
+    same rerank and confidence gate as plain Q&A, so a gated search returns nothing."""
+    cfg = deps.settings.pipeline
+    turn = Turn(question=question, mode="agent")
+    state, summary = await load_memory(deps, user_id, conversation_id, turn)
+    turn.history_text = memory.history_text(summary, state.recent)
+
+    by_marker: dict[str, Hit] = {}
+    seen: set[uuid.UUID] = set()
+
+    async def search(query: str, ids: tuple[uuid.UUID, ...] | None) -> str:
+        scope = Scope(user_id, ids)
+
+        def gather():  # type: ignore[no-untyped-def]
+            with deps.open_session(user_id) as s:
+                return gather_candidates(deps.make_store(s), deps.embedder, query, scope, cfg)
+
+        cands = await run_in_threadpool(gather)
+        r = await run_in_threadpool(
+            finalize, cands, query, deps.reranker, cfg, deps.settings.retrieval_min_score
+        )
+        if not r.hits:
+            return "No relevant passages were found for this query."
+        rendered, _ = pack_context(
+            [Group(None, r.hits)], cfg.context_token_budget // 2, False, by_marker, seen
+        )
+        return "\n".join(rendered) or "Those passages were already returned by an earlier search."
+
+    toolbox = ToolBox(search, document_ids, http)
+    result = await run_agent(
+        question=question,
+        history_text=turn.history_text,
+        toolbox=toolbox,
+        by_marker=by_marker,
+        llm=deps.llm,
+        settings=deps.settings,
+        emit=emit,
+        **({"limits": limits} if limits else {}),
+    )
+    return result, turn
+
+
+def agent_meta(result: AgentResult) -> dict[str, Any]:
+    return {
+        "mode": "agent",
+        "tool_calls": result.tool_log,
+        "stopped": result.stopped,
+        "degraded": [],
+    }
+
+
+@dataclass
+class TurnAnswer:
+    answer: RagAnswer
+    meta: dict[str, Any]
+    tool_calls: list[dict[str, Any]]
+
+
+async def answer_turn(
+    deps: Deps,
+    user_id: uuid.UUID,
+    conversation_id: uuid.UUID | None,
+    question: str,
+    document_ids: tuple[uuid.UUID, ...] | None,
+    mode: str,
+) -> TurnAnswer:
+    """Non-streaming answer for any mode (used by POST /chat)."""
+    if mode == "agent":
+        res, _ = await run_agent_turn(deps, user_id, conversation_id, question, document_ids)
+        answer = RagAnswer(res.answer, res.citations, [], res.input_tokens, res.output_tokens)
+        return TurnAnswer(answer, agent_meta(res), res.tool_log)
+    turn = await prepare_turn(deps, user_id, conversation_id, question, document_ids, mode)
+    answer = await answer_question(turn, deps.llm, deps.settings, deps.settings.pipeline)
+    return TurnAnswer(answer, turn_meta(turn), [])
+
+
 def persist_exchange(
     open_session: SessionOpener,
     user_id: uuid.UUID,
@@ -196,6 +304,7 @@ def persist_exchange(
     input_tokens: int,
     output_tokens: int,
     incomplete: bool,
+    tool_calls: list[dict[str, Any]] | None = None,
 ) -> tuple[uuid.UUID, uuid.UUID]:
     with open_session(user_id) as session:
         conv = session.get(Conversation, conversation_id) if conversation_id else None
@@ -213,6 +322,7 @@ def persist_exchange(
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             incomplete=incomplete,
+            tool_calls=tool_calls or [],
         )
         session.add(reply)
         session.flush()
@@ -275,18 +385,39 @@ async def _produce(
         await queue.put(sse("status", {"stage": stage}))
 
     try:
-        turn = await prepare_turn(deps, user_id, conversation_id, question, document_ids, mode, status)
-        async for item in stream_answer(turn, deps.llm, deps.settings, config):
-            if isinstance(item, RagAnswer):
-                final = item
-            else:
-                if item.event == "token":
-                    partial.append(str(item.data["text"]))
-                await queue.put(sse(item.event, item.data))
+        tool_calls: list[dict[str, Any]] = []
+        if mode == "agent":
+
+            async def emit(ev: StreamEvent) -> None:
+                await queue.put(sse(ev.event, ev.data))
+
+            res, _turn = await run_agent_turn(
+                deps, user_id, conversation_id, question, document_ids, emit
+            )
+            # The agent loop is not token-streamed: tools run first, then the answer arrives whole.
+            await queue.put(sse("token", {"text": res.answer}))
+            for c in res.citations:
+                await queue.put(sse("citation", c.to_json()))
+            final = RagAnswer(res.answer, res.citations, [], res.input_tokens, res.output_tokens)
+            meta = agent_meta(res)
+            tool_calls = res.tool_log
+        else:
+            turn = await prepare_turn(
+                deps, user_id, conversation_id, question, document_ids, mode, status
+            )
+            async for item in stream_answer(turn, deps.llm, deps.settings, config):
+                if isinstance(item, RagAnswer):
+                    final = item
+                else:
+                    if item.event == "token":
+                        partial.append(str(item.data["text"]))
+                    await queue.put(sse(item.event, item.data))
+            meta = turn_meta(turn)
         assert final is not None
         conv_id, msg_id = await run_in_threadpool(
             persist_exchange, deps.open_session, user_id, conversation_id, question,
             final.answer, final.citations, final.input_tokens, final.output_tokens, False,
+            tool_calls,
         )
         await queue.put(
             sse(
@@ -299,7 +430,7 @@ async def _produce(
                     "output_tokens": final.output_tokens,
                     "latency_ms": _ms(started),
                     "closest": final.closest,
-                    **turn_meta(turn),
+                    **meta,
                 },
             )
         )
@@ -318,4 +449,4 @@ async def _produce(
         await queue.put(None)
 
 
-__all__ = ["Deps", "closest_json", "prepare_turn", "stream_chat", "validate_request"]
+__all__ = ["Deps", "answer_turn", "closest_json", "prepare_turn", "stream_chat", "validate_request"]

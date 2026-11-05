@@ -119,4 +119,38 @@ class Message(Base):
     output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     cost_usd: Mapped[float | None] = mapped_column(Numeric(10, 6), nullable=True)
     incomplete: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    tool_calls: Mapped[list[Any]] = mapped_column(JSONB, default=list, server_default="[]")
+    created_at: Mapped[datetime] = _now()
+
+
+class Quiz(Base):
+    __tablename__ = "quizzes"
+    id: Mapped[uuid.UUID] = _pk()
+    document_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = _now()
+
+
+class FlashcardSet(Base):
+    __tablename__ = "flashcards"
+    id: Mapped[uuid.UUID] = _pk()
+    document_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = _now()
+
+
+class Summary(Base):
+    """Cached map-reduce results, per document version: one row per section (parent chunk) and
+    one 'document' row. Re-uploading creates a new version, so stale summaries never leak."""
+
+    __tablename__ = "summaries"
+    id: Mapped[uuid.UUID] = _pk()
+    document_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"), index=True)
+    version_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("document_versions.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(10))  # section | document
+    chunk_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = _now()

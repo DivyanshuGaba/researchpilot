@@ -7,7 +7,14 @@ from types import SimpleNamespace
 
 from app.config import Settings
 from app.services.chat_service import Deps
-from app.services.generation.llm_client import LLMEvent, LLMRequest, LLMResponse
+from app.services.generation.llm_client import (
+    ConverseRequest,
+    LLMEvent,
+    LLMRequest,
+    LLMResponse,
+    ToolCall,
+    ToolTurn,
+)
 from app.services.vectorstore import Hit
 
 DOC_A, DOC_B = uuid.uuid4(), uuid.uuid4()
@@ -69,6 +76,7 @@ class FakeLLM:
     def __init__(self, text="ATP comes from mitochondria [c_1].", rewrite="standalone question"):
         self.text, self.rewrite, self.requests, self.rewrites = text, rewrite, [], []
         self.summaries = []
+        self.script, self.converse_requests, self.delay = [], [], 0.0
 
     async def complete(self, req: LLMRequest) -> LLMResponse:
         if req.system.startswith("You maintain"):
@@ -122,3 +130,31 @@ def make_deps(store=None, llm=None, reranker="default", session=None, settings=N
         settings=settings or Settings(llm_model="test-model"),
     )
     return deps, session
+
+
+def tool_turn(*calls, text="", tokens=(10, 5)):
+    """A scripted model turn that calls tools: tool_turn(("calculator", {"expression": "1+1"}))."""
+    tcs = [ToolCall(f"tu_{i}_{n}", n, a) for i, (n, a) in enumerate(calls)]
+    blocks = [{"type": "tool_use", "id": c.id, "name": c.name, "input": c.input} for c in tcs]
+    return ToolTurn(text, tcs, blocks, *tokens)
+
+
+def text_turn(text, tokens=(10, 5)):
+    return ToolTurn(text, [], [{"type": "text", "text": text}], *tokens)
+
+
+async def _converse(self, req: ConverseRequest) -> ToolTurn:
+    import asyncio
+    import copy
+
+    # snapshot: the agent keeps mutating its messages list, a real client serializes at call time
+    self.converse_requests.append(dataclasses.replace(req, messages=copy.deepcopy(req.messages)))
+    wrap_up = bool(req.tool_choice and req.tool_choice.get("type") == "none")
+    if self.delay and not wrap_up:
+        await asyncio.sleep(self.delay)
+    if wrap_up:
+        return text_turn("Here is what I found so far.")
+    return self.script.pop(0) if self.script else text_turn("done")
+
+
+FakeLLM.converse = _converse  # type: ignore[attr-defined]

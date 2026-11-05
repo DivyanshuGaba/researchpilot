@@ -4,8 +4,11 @@ from app.models.tables import (
     Conversation,
     Document,
     DocumentVersion,
+    FlashcardSet,
     IngestionJob,
     Message,
+    Quiz,
+    Summary,
     User,
 )
 
@@ -15,7 +18,10 @@ __all__ = [
     "Conversation",
     "Document",
     "DocumentVersion",
+    "FlashcardSet",
     "IngestionJob",
     "Message",
+    "Quiz",
+    "Summary",
     "User",
 ]

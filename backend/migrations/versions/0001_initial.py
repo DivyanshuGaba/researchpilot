@@ -20,9 +20,16 @@ TENANT_TABLES = [
 ]
 
 
+# Tables as of the first release. Later migrations add later tables and columns, so this must
+# not use the live models for everything (a fresh install would then fail in 0002).
+ORIGINAL_TABLES = ["users", *TENANT_TABLES]
+
+
 def upgrade() -> None:
     op.execute("CREATE EXTENSION IF NOT EXISTS vector")
-    Base.metadata.create_all(op.get_bind())
+    Base.metadata.create_all(
+        op.get_bind(), tables=[Base.metadata.tables[t] for t in ORIGINAL_TABLES]
+    )
 
     op.execute(
         "CREATE INDEX ix_chunks_embedding ON chunks USING hnsw (embedding vector_cosine_ops)"
@@ -65,5 +72,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    Base.metadata.drop_all(op.get_bind())
+    Base.metadata.drop_all(op.get_bind(), tables=[Base.metadata.tables[t] for t in ORIGINAL_TABLES])
     op.execute("DROP FUNCTION IF EXISTS chunks_tsv_update()")
