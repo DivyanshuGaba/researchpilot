@@ -25,6 +25,7 @@ def make_hit(text="Mitochondria produce ATP.", doc=DOC_A, title="Biology", page=
 class FakeStore:
     def __init__(self, hits=None, sparse=None):
         self.hits, self.sparse, self.scopes = list(hits or []), list(sparse or []), []
+        self.queries = []
 
     def _filter(self, hits, scope):
         self.scopes.append(scope)
@@ -36,6 +37,7 @@ class FakeStore:
         return self._filter(self.hits, scope)
 
     def keyword_search(self, query, k, scope):
+        self.queries.append(query)
         return self._filter(self.sparse, scope)
 
     def delete_version(self, version_id):  # pragma: no cover

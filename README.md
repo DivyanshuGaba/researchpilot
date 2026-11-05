@@ -4,7 +4,7 @@ Upload PDFs, DOCX files or URLs and chat with them. Answers are grounded in your
 
 ## Status
 
-Phases 1 (foundation and basic RAG) and 2 (frontend, streaming, citations) are implemented. Hybrid retrieval, agents, eval and caching come in later phases.
+Phases 1 to 3 are implemented: ingestion, streaming chat with page-level citations and PDF highlights, hybrid retrieval with reranking and a confidence gate, query rewriting with conversation memory, multi-document comparison, and a semantic chunker. Agents, the evaluation harness, caching, auth and observability come in later phases.
 
 ## Quick start
 
@@ -24,6 +24,16 @@ curl localhost:8000/documents -H "X-User-Id: $UID"          # wait for status "r
 curl -X POST localhost:8000/chat -H "X-User-Id: $UID" -H 'content-type: application/json' \
   -d '{"question":"What method did the authors use?"}'
 ```
+
+## How a question is answered
+
+1. **Memory and rewrite:** the last 6 messages (older ones summarized) turn a follow-up like "where does it happen?" into a standalone query. Skipped on the first turn.
+2. **Retrieve:** dense vector search and Postgres full-text search, merged with Reciprocal Rank Fusion.
+3. **Rerank:** a cross-encoder rescores the top 30; at most 3 hits per section are kept.
+4. **Confidence gate:** if the best rerank score is below `RETRIEVAL_MIN_SCORE`, the answer is "your documents don't cover this", with no model call and no citations, plus the closest passages to inspect.
+5. **Generate:** sources go to Claude wrapped as untrusted data; `[c_N]` citations are validated server-side against what was retrieved.
+
+Compare mode (select two or more documents and tick Compare) retrieves per document and answers with a section per document. Settings: `PIPELINE__RETRIEVAL_MODE` (`vector`, `hybrid`, `hybrid_rerank`), `PIPELINE__CHUNKER` (`recursive`, `semantic`), `RETRIEVAL_MIN_SCORE`. Rationale and measurements: [docs/decisions.md](docs/decisions.md).
 
 ## Frontend
 
@@ -54,7 +64,7 @@ pytest && ruff check . && mypy app
 | sqlalchemy, alembic, psycopg, pgvector | Postgres access, migrations, vector column |
 | celery, redis | Background ingestion |
 | anthropic | Answer generation |
-| sentence-transformers | Local embeddings (`BAAI/bge-small-en-v1.5`), no document text leaves the machine |
+| sentence-transformers | Local embeddings (`BAAI/bge-small-en-v1.5`) and the cross-encoder reranker (`ms-marco-MiniLM-L-6-v2`); no document text leaves the machine |
 | react-pdf (pdf.js) | In-browser PDF viewer; citation highlights are drawn from stored bounding boxes |
 | vitest | Frontend unit tests (SSE parser, citation splitter) |
 | pymupdf | PDF text with page numbers and bounding boxes |
@@ -62,6 +72,6 @@ pytest && ruff check . && mypy app
 
 ## Known limitations (Phase 1)
 
-- Dev-only auth; vector-only retrieval with no confidence gate; the production Docker image for the frontend is not built yet (Phase 6); highlights are accurate for unrotated PDF pages only; scanned PDFs are rejected; DOCX and URLs report page 1.
+- Dev-only auth; the confidence threshold is calibrated on a tiny sample; no intent routing (compare mode is a manual toggle); answers render as plain text (markdown headings show as `##`); the production Docker image for the frontend is not built yet (Phase 6); highlights are accurate for unrotated PDF pages only; scanned PDFs are rejected; DOCX and URLs report page 1.
 
 Integration tests use the compose Postgres on host port 5433 (5432 is often taken by a local Postgres): `docker compose up -d postgres`, then `alembic upgrade head` with `MIGRATION_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5433/researchpilot`.

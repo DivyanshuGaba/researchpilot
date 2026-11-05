@@ -39,3 +39,21 @@ Ran the real Celery worker (`--pool=solo`; fork plus torch is risky on macOS), r
 - No API key or traceback in the API or worker logs.
 - **Embedder warm-up at API start** (`WARM_EMBEDDER`, default on). The first question previously paid about 5 s for model loading.
 - **Known weakness, for Phase 3:** an unanswerable question ("capital of Mongolia") still retrieves the nearest chunk, and the model's refusal carries a `[c_1]` citation. The confidence gate (rerank score vs `RETRIEVAL_MIN_SCORE`) is what should short-circuit this before the LLM and return no citation.
+
+## Phase 3
+
+- **Retrieval pipeline** (`retrieval/service.py`): dense top 30 + Postgres full-text top 30 -> RRF (k=60) -> cross-encoder rerank of the fused top 30 -> cap 3 hits per parent -> keep top 6 -> confidence gate. Modes `vector`, `hybrid`, `hybrid_rerank` (default) so the Phase 5 eval can sweep them. Dense and sparse run sequentially, not in parallel (about 10 ms total on this corpus).
+- **Keyword query is an OR query.** `websearch_to_tsquery` ANDs every word, so a full question matches nothing. Words are sanitized to `[a-z0-9]+` and OR-ed; the `english` config drops stopwords.
+- **Reranker scores get an explicit sigmoid.** Measured with the installed sentence-transformers: `predict()` returns raw logits (relevant about -1 to 8, irrelevant about -11), not 0..1. Without the sigmoid, the original 0.35 threshold falsely refused 2 of 8 answerable questions.
+- **`RETRIEVAL_MIN_SCORE` is now 0.05** (provisional). After the sigmoid, 8 answerable questions scored 0.26 to 1.0 and 6 unanswerable ones scored about 0.0, all refused, in about 0.1 s with no LLM call. This is a 14 question, 2 document sample; recalibrate on the Phase 5 eval set. The gate only applies to reranker scores; if the reranker is unavailable the request is marked `degraded` and answers without a gate.
+- **A gated answer returns no citations**, but includes the 3 closest passages so the user can inspect them (architecture 5.4). The UI shows them as clickable items that open the PDF.
+- **Compare mode is explicit** (`mode: "compare"` plus at least two `document_ids`), not intent-routed; the router from architecture 5.2 is not built yet. Retrieval runs per document (top 3 each), sources are grouped in `<document>` blocks, and a document with no relevant passage is stated as such.
+- **Compare mode always rewrites the query into a neutral topic.** Found in real use: "how do the two documents differ on ATP yield" scored 0.027 against a passage stating the ATP yield (gated), while "ATP yield per glucose molecule" scored 0.995. Comparison wording makes a cross-encoder rate every passage as irrelevant.
+- **Query rewrite uses Haiku** (`PIPELINE__REWRITE_MODEL`) and is skipped on the first QA turn. If it fails, the query falls back to the last user turn plus the question.
+- **Memory:** last 6 messages verbatim; once more than 10 are unsummarized, the older ones are folded into `conversations.summary` (migration 0003) using Haiku. If summarization fails the older messages are dropped for that turn (marked `degraded`). History is stripped of citation markers and the system prompt says it is not evidence.
+- **Message ordering** uses `(created_at, role DESC)` because a user/assistant pair is inserted in one transaction and shares a timestamp.
+- **Semantic chunker** (`PIPELINE__CHUNKER=semantic`): breaks children where adjacent-sentence similarity is in the lowest 25%, never mid-page, with a minimum child size and no overlap. On the 3 page test PDF it produced the same chunks as the recursive chunker, so it is verified to run but not shown to be better; that is for the Phase 5 eval.
+- **Prompts:** `v2` (default) adds the rule that conversation history is not evidence and that a source must not be cited for something it did not answer. `v1` is kept. Compare uses its own prompt.
+- **Pipeline settings from the environment** via `PIPELINE__<FIELD>` (e.g. `PIPELINE__RETRIEVAL_MODE=vector`).
+- **/chat and /chat/stream share one code path** (`chat_service.prepare_turn`). The non-streaming route previously duplicated retrieval and persistence.
+- **Not done from the architecture doc:** intent routing, MMR (only the per-parent cap), embedding cache, and parallel dense/sparse.

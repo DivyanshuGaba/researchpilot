@@ -119,9 +119,11 @@ async def prepare_turn(
     turn.history_text = memory.history_text(summary, state.recent)
 
     t = time.perf_counter()
-    if state.recent or summary:
+    if state.recent or summary or mode == "compare":
         await on_status("rewriting")
-    turn.standalone, used_llm = await rewrite_query(question, state, summary, deps.llm, deps.settings)
+    turn.standalone, used_llm = await rewrite_query(
+        question, state, summary, deps.llm, deps.settings, mode
+    )
     if used_llm or turn.standalone != question:
         turn.timings_ms["rewrite"] = _ms(t)
 

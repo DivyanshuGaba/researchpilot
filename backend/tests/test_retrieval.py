@@ -120,3 +120,13 @@ def test_rerank_failure_falls_back_to_fused_without_gating():
 def test_missing_reranker_is_degraded_not_gated():
     r = finalize(Candidates([hit("a")]), "q", None, CFG, min_score=0.35)
     assert not r.gated and r.degraded == ["rerank"]
+
+
+def test_sigmoid_maps_logits_to_unit_interval_and_is_monotonic():
+    from app.services.retrieval.reranker import sigmoid
+
+    assert sigmoid(0) == 0.5
+    assert sigmoid(-11) < 0.0001
+    assert sigmoid(-1.04) > 0.26
+    assert sigmoid(-1000) == sigmoid(-50) and sigmoid(1000) <= 1.0  # no overflow
+    assert sigmoid(-2) < sigmoid(-1) < sigmoid(3)

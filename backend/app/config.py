@@ -28,7 +28,7 @@ class PipelineConfig(BaseModel, frozen=True):
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_nested_delimiter="__")
 
     anthropic_api_key: str = ""
     llm_model: str = "claude-sonnet-5-5"
@@ -40,7 +40,9 @@ class Settings(BaseSettings):
     embedding_dim: int = 384
     reranker: str = "cross_encoder"
     jwt_secret: str = "change_me"
-    retrieval_min_score: float = 0.35
+    # Provisional: measured on a tiny corpus (relevant >= 0.26, irrelevant <= 0.0001 after
+    # sigmoid). Recalibrate on the eval set in Phase 5.
+    retrieval_min_score: float = 0.05
     upload_dir: str = "./storage/uploads"
     max_upload_mb: int = 50
     warm_embedder: bool = True

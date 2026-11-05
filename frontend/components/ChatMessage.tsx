@@ -1,6 +1,6 @@
 "use client";
 
-import type { Citation } from "@/lib/api";
+import type { Citation, Closest } from "@/lib/api";
 import { segmentAnswer } from "@/lib/citations";
 
 export type ChatMsg = {
@@ -12,11 +12,19 @@ export type ChatMsg = {
   status?: string;
   error?: string;
   stopped?: boolean;
+  closest?: Closest[];
+  standalone?: string; // the rewritten search query, shown when it differs from the question
+  question?: string;
 };
 
-type Props = { msg: ChatMsg; onCite: (c: Citation) => void; activeChunk?: string };
+type Props = {
+  msg: ChatMsg;
+  onCite: (c: Citation) => void;
+  onClosest: (p: Closest) => void;
+  activeChunk?: string;
+};
 
-export default function ChatMessage({ msg, onCite, activeChunk }: Props) {
+export default function ChatMessage({ msg, onCite, onClosest, activeChunk }: Props) {
   if (msg.role === "user") {
     return (
       <div className="flex justify-end">
@@ -68,6 +76,26 @@ export default function ChatMessage({ msg, onCite, activeChunk }: Props) {
             </li>
           ))}
         </ul>
+      )}
+      {msg.closest && msg.closest.length > 0 && !msg.streaming && (
+        <div className="rounded border border-zinc-200 p-2 text-xs dark:border-zinc-800">
+          <p className="mb-1 text-zinc-500">Closest passages (too weak to answer from):</p>
+          <ul className="space-y-1">
+            {msg.closest.map((p, i) => (
+              <li key={i}>
+                <button className="text-left hover:underline" onClick={() => onClosest(p)}>
+                  <span className="font-medium">
+                    {p.document_title}, p.{p.page_start}
+                  </span>
+                  <span className="text-zinc-500"> — {p.quote.slice(0, 110)}…</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {msg.standalone && !msg.streaming && msg.standalone !== msg.question && (
+        <p className="text-xs text-zinc-400">Searched for: {msg.standalone}</p>
       )}
       {msg.stopped && <p className="text-xs text-zinc-500">Stopped.</p>}
       {msg.error && <p className="text-sm text-red-600">{msg.error}</p>}

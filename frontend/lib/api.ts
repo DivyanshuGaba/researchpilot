@@ -136,16 +136,40 @@ export async function fetchPdf(documentId: string): Promise<Blob> {
   return res.blob();
 }
 
+/** A passage shown when the documents do not cover the question (the confidence gate fired). */
+export type Closest = {
+  document_id: string;
+  document_title: string;
+  page_start: number;
+  quote: string;
+  bbox_list: BBox[];
+  score: number;
+};
+
 export type ChatEvent =
   | { type: "status"; stage: string }
   | { type: "token"; text: string }
   | { type: "citation"; citation: Citation }
-  | { type: "done"; answer: string; conversationId: string; messageId: string }
+  | { type: "closest"; passages: Closest[] }
+  | {
+      type: "done";
+      answer: string;
+      conversationId: string;
+      messageId: string;
+      standaloneQuery: string;
+      closest: Closest[];
+      degraded: string[];
+    }
   | { type: "error"; message: string };
 
 /** POST + SSE over fetch (EventSource cannot send a body or custom headers). */
 export async function streamChat(
-  body: { question: string; conversation_id?: string; document_ids?: string[] },
+  body: {
+    question: string;
+    conversation_id?: string;
+    document_ids?: string[];
+    mode?: "qa" | "compare";
+  },
   onEvent: (e: ChatEvent) => void,
   signal: AbortSignal,
 ): Promise<void> {
@@ -197,8 +221,18 @@ export function parseFrame(frame: string): ChatEvent | null {
       return { type: "token", text: d.text };
     case "citation":
       return { type: "citation", citation: d as Citation };
+    case "closest":
+      return { type: "closest", passages: d.passages as Closest[] };
     case "done":
-      return { type: "done", answer: d.answer, conversationId: d.conversation_id, messageId: d.message_id };
+      return {
+        type: "done",
+        answer: d.answer,
+        conversationId: d.conversation_id,
+        messageId: d.message_id,
+        standaloneQuery: d.standalone_query ?? "",
+        closest: (d.closest ?? []) as Closest[],
+        degraded: d.degraded ?? [],
+      };
     case "error":
       return { type: "error", message: d.message };
     default:

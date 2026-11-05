@@ -1,3 +1,4 @@
+import uuid
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -17,6 +18,14 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         from app.services.embeddings import get_embedder
 
         await run_in_threadpool(get_embedder(settings).embed_query, "warm up")
+        from app.services.retrieval.reranker import get_reranker
+
+        reranker = get_reranker(settings)
+        if reranker is not None:
+            from app.services.vectorstore import Hit
+
+            probe = Hit(uuid.uuid4(), uuid.uuid4(), "", 1, 1, 0.0, "warm up", "warm up")
+            await run_in_threadpool(reranker.rerank, "warm up", [probe], 1)
     yield
 
 

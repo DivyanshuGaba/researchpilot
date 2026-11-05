@@ -148,3 +148,19 @@ def test_pack_context_dedupes_shared_parents_and_respects_budget():
 
 def test_reranker_fake_is_used_for_scores():
     assert FakeReranker().rerank("q", [make_hit("ATP")], 1)[0].score == 0.9
+
+
+def test_compare_mode_searches_for_the_topic_not_the_comparison_wording(setup):
+    build, _ = setup
+    store = FakeStore([make_hit("Paper A: glucose yields 30 ATP.", DOC_A, "Paper A", 2)])
+    llm = FakeLLM(rewrite="ATP yield per glucose")
+    client = build(store, llm)
+    client.post(
+        "/chat",
+        json={"question": "How do the two papers differ on ATP yield?", "mode": "compare",
+              "document_ids": [str(DOC_A), str(DOC_B)]},
+        headers=H,
+    )
+    assert len(llm.rewrites) == 1  # rewritten even on the first turn
+    assert llm.rewrites[0].system.startswith("Rewrite the user's request")
+    assert set(store.queries) == {"ATP yield per glucose"}  # the neutral topic, for every document

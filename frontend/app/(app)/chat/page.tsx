@@ -3,9 +3,23 @@
 import { useEffect, useRef, useState } from "react";
 import ChatMessage, { type ChatMsg } from "@/components/ChatMessage";
 import PdfPanel from "@/components/PdfPanel";
-import { listDocuments, streamChat, type ChatEvent, type Citation, type Doc } from "@/lib/api";
+import {
+  listDocuments,
+  streamChat,
+  type ChatEvent,
+  type Citation,
+  type Closest,
+  type Doc,
+} from "@/lib/api";
 
 type Viewer = { citation: Citation; nonce: number };
+
+const STAGE_LABEL: Record<string, string> = {
+  rewriting: "Understanding your question",
+  searching: "Searching your documents",
+  reranking: "Ranking passages",
+  writing: "Writing",
+};
 
 export default function ChatPage() {
   const [docs, setDocs] = useState<Doc[]>([]);
@@ -14,6 +28,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [viewer, setViewer] = useState<Viewer | null>(null);
+  const [compare, setCompare] = useState(false);
   const conversationId = useRef<string | undefined>(undefined);
   const abort = useRef<AbortController | null>(null);
   const nextId = useRef(0);
@@ -35,7 +50,10 @@ export default function ChatPage() {
   function onEvent(e: ChatEvent) {
     switch (e.type) {
       case "status":
-        patchLast((m) => ({ ...m, status: e.stage === "searching" ? "Searching your documents" : "Writing" }));
+        patchLast((m) => ({ ...m, status: STAGE_LABEL[e.stage] ?? "Working" }));
+        break;
+      case "closest":
+        patchLast((m) => ({ ...m, closest: e.passages }));
         break;
       case "token":
         patchLast((m) => ({ ...m, content: m.content + e.text }));
@@ -46,7 +64,13 @@ export default function ChatPage() {
       case "done":
         conversationId.current = e.conversationId;
         // The server's answer is authoritative: invalid citation markers are already removed.
-        patchLast((m) => ({ ...m, content: e.answer, streaming: false }));
+        patchLast((m) => ({
+          ...m,
+          content: e.answer,
+          streaming: false,
+          closest: e.closest.length ? e.closest : m.closest,
+          standalone: e.standaloneQuery,
+        }));
         break;
       case "error":
         patchLast((m) => ({ ...m, error: e.message, streaming: false }));
@@ -62,7 +86,15 @@ export default function ChatPage() {
     setMessages((ms) => [
       ...ms,
       { id: nextId.current++, role: "user", content: question, citations: [] },
-      { id: nextId.current++, role: "assistant", content: "", citations: [], streaming: true, status: "Searching your documents" },
+      {
+        id: nextId.current++,
+        role: "assistant",
+        content: "",
+        citations: [],
+        streaming: true,
+        status: "Searching your documents",
+        question,
+      },
     ]);
     const controller = new AbortController();
     abort.current = controller;
@@ -72,6 +104,7 @@ export default function ChatPage() {
           question,
           conversation_id: conversationId.current,
           document_ids: scope.size ? [...scope] : undefined,
+          mode: compareOn ? "compare" : "qa",
         },
         onEvent,
         controller.signal,
@@ -89,6 +122,9 @@ export default function ChatPage() {
     }
   }
 
+  // Compare needs at least two selected documents; it silently reverts to Q&A below that.
+  const compareOn = compare && scope.size >= 2;
+
   const toggle = (id: string) =>
     setScope((s) => {
       const n = new Set(s);
@@ -98,6 +134,17 @@ export default function ChatPage() {
     });
 
   const openCitation = (c: Citation) => setViewer((v) => ({ citation: c, nonce: (v?.nonce ?? 0) + 1 }));
+  const openClosest = (p: Closest) =>
+    openCitation({
+      marker: "",
+      chunk_id: "",
+      document_id: p.document_id,
+      document_title: p.document_title,
+      page_start: p.page_start,
+      page_end: p.page_start,
+      quote: p.quote,
+      bbox_list: p.bbox_list,
+    });
 
   return (
     <div className="flex h-full">
@@ -119,6 +166,20 @@ export default function ChatPage() {
               </label>
             ))}
             {scope.size === 0 && <span className="text-zinc-500">(all documents)</span>}
+            <label
+              className={`ml-auto flex items-center gap-1.5 ${
+                scope.size >= 2 ? "cursor-pointer" : "cursor-not-allowed opacity-50"
+              }`}
+              title={scope.size >= 2 ? "Retrieve from each selected document and compare" : "Select two or more documents to compare"}
+            >
+              <input
+                type="checkbox"
+                checked={compareOn}
+                disabled={scope.size < 2}
+                onChange={(e) => setCompare(e.target.checked)}
+              />
+              Compare
+            </label>
           </div>
         )}
 
@@ -131,7 +192,13 @@ export default function ChatPage() {
             </p>
           )}
           {messages.map((m) => (
-            <ChatMessage key={m.id} msg={m} onCite={openCitation} activeChunk={viewer?.citation.chunk_id} />
+            <ChatMessage
+              key={m.id}
+              msg={m}
+              onCite={openCitation}
+              onClosest={openClosest}
+              activeChunk={viewer?.citation.chunk_id}
+            />
           ))}
           <div ref={bottom} />
         </div>

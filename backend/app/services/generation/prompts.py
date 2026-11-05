@@ -53,6 +53,13 @@ the conversation. Resolve pronouns and references ("it", "that paper", "the seco
 using the conversation. If the message is already standalone, return it unchanged.
 Output ONLY the query: no quotes, no explanation."""
 
+COMPARE_REWRITE_PROMPT_V1 = """\
+Rewrite the user's request into one search query naming the topic or aspect to look up in \
+EACH document, with every comparison word removed (compare, differ, difference, versus, both, \
+similar, which is better). Resolve references using the conversation if one is given. \
+Example: "How do the two papers differ on sample size?" becomes "sample size".
+Output ONLY the query: no quotes, no explanation."""
+
 SUMMARY_PROMPT_V1 = """\
 You maintain a running summary of a conversation between a user and a study assistant about \
 their documents. Given the previous summary and new messages, write the updated summary in \
