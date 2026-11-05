@@ -74,3 +74,47 @@ Ran the real Celery worker (`--pool=solo`; fork plus torch is risky on macOS), r
 - **Summaries are map-reduce**: one Haiku call per section (parent chunk), 5 in parallel, then a reduce with the main model; if the section summaries exceed 6 000 tokens they are reduced in groups first. Beyond 150 sections the document is sampled evenly and flagged `truncated`. Section and document summaries are cached per document version in `summaries` (partial unique indexes plus `ON CONFLICT DO NOTHING` for concurrent requests); a new version never reuses them.
 - **Migrations fixed for fresh installs.** 0001 used the live models for `create_all`, so a fresh database would have failed at 0002 with "column already exists". 0001 now creates only the original tables and 0002 to 0004 use `IF NOT EXISTS`. Verified from an empty database and incrementally.
 - **No per-user quotas or rate limits yet** on the study endpoints or the agent; they call the model on every request. That is Phase 5 (auth and rate limiting).
+
+## Phase 5
+
+### Auth, limits, reliability
+- **Auth:** argon2id passwords; HS256 access tokens that live 15 minutes, with the algorithm pinned on decode and a `typ` claim; refresh tokens are random, stored only as SHA-256, rotated on every use, sent as an HttpOnly `SameSite=Lax` cookie scoped to `/auth`. Presenting an already-used refresh token revokes every session of that user (theft signal). Cookie endpoints also check the `Origin` header. Login says the same thing for a wrong password and an unknown email and does the same hashing work. The access token lives only in browser memory.
+- **Accepted trade-offs:** registration reveals whether an email is taken (409) and is open unless `REGISTRATION_ENABLED=false`; no email verification or password reset yet; admins are a list of emails in `ADMIN_EMAILS`.
+- **The API refuses to start** outside `ENVIRONMENT=dev` with the default or a short `JWT_SECRET`. The old `X-User-Id` header and `/auth/dev-user` are gone.
+- **Limits:** per user 30 model-calling requests a minute (chat and study) and 30 uploads an hour; login 10 attempts per 15 minutes per address and email; 10 sign-ups an hour per address; a daily token budget of 500 000 per user. Counters live in Redis; if Redis is down the limiter falls back to an in-process counter at half the limit and the API stays up. Tokens are counted from every model call in a request (rewrite, summary, answer) through `MeteredLLM`, including study endpoints.
+- **Outbox for ingestion:** the upload writes the document and an `outbox` row in one transaction; the API dispatches right after commit and a background loop (5 s) retries failures with `FOR UPDATE SKIP LOCKED`, giving up after 10 attempts (the row then stays pending and shows in the queue-depth metric). Delivery is at least once; ingestion replaces a version's chunks, so a repeat is harmless.
+- **Model failures** become `LLMUnavailable` with a safe message and a category (`rate_limited` 429, `timeout` 504, `unavailable` and `misconfigured` and `billing` 503). The SDK already retries 429 and 5xx three times with backoff; calls share one process-wide concurrency cap (8). When generation fails after retrieval succeeded, the response still carries the retrieved passages so the user gets value. A depleted credit balance is a plain 400 from the provider and is now classified as `billing`; that was found when the evaluation runs used up the account.
+
+### Guardrails
+- **Layers:** ingestion scanner (normalizes zero-width and full-width characters; 8 pattern families) flags passages; flagged passages are marked `suspicious="true"` with a warning inside the prompt (prompt `v3`, now the default); our own delimiter tags are neutralized inside document text so a document cannot close or forge `<source>`; tools have no write access; the output sanitizer removes markdown and HTML images, drops link destinations to unknown domains, and strips query strings from bare URLs. Flagged passages stay retrievable.
+- **The scanner is a heuristic**, tuned to flag 16 attack phrasings and none of 9 ordinary scientific sentences. It is a signal for the other layers, not a gate.
+- **PII and secrets:** emails, phone numbers, SSNs and Luhn-valid card numbers are masked before query logs and traces; API keys, JWTs and bearer tokens are redacted from every log line by a log record factory. A 16-digit number that fails the card checksum can still be masked as a phone number (over-masking is the safe direction).
+- **A model may refuse the whole answer** when a document tells it to fetch the cloud-metadata address (`stop_reason: "refusal"`, seen in a first injection run). That is a denial of answer for that document, not a leak. The injection evaluation needs to be re-run with the corrected scoring (see the results doc).
+
+### Observability
+- **`query_logs`** holds one row per answered question: mode, pipeline hash, masked rewritten query, retrieved chunk ids, top score, gate flag, cache status, per-stage timings, tokens, cache-read tokens, cost, degraded stages and any error code. `messages` now carries latency and cost. Logging is best effort and can never fail an answer.
+- **Pipeline hash** covers the pipeline config, answer model, confidence threshold, embedding model and reranker; caches and logs share it.
+- **`/admin/metrics`** reads aggregates through a separate read-only Postgres role (`rp_metrics`, `BYPASSRLS`, `SELECT` only) so the application role stays bound by row level security. `/usage` shows a user their own cost.
+- **Langfuse export** goes through the public ingestion API with masked inputs and fails soft. It has not been run against a real Langfuse project.
+- **`prompt_cached` is recorded but unproven:** the system prompt is marked cacheable, but it is likely shorter than the model's minimum cacheable prefix, so cache reads may never occur. The `cache_read_tokens` column will show it.
+- **Not built from the architecture's alert list:** alerting on p95 latency, refusal spikes and daily cost (the metrics exist, the alerts do not).
+
+### Caching
+- **Layers:** embedding cache (Redis, keyed by model and text), exact response cache, semantic cache, prompt cache. Keys carry the user, a hash of the document set's latest versions, the pipeline hash, the mode and the normalized standalone query. Adding, re-uploading or removing a document changes the key, so a stale answer cannot be served. Agent answers, degraded runs, empty answers and model-failure messages are never stored. Redis down means the cache is skipped for 30 s at a time; requests continue.
+- **The semantic threshold is 0.97, not the architecture's 0.95.** The evaluation found that at 0.95 one of 12 near-duplicate questions with different answers (replace with `[MASK]` versus replace with a random token, similarity 0.956) would be answered with the wrong cached answer, while 0.97 had none and still reused half of the true paraphrases. The sample is small (12 and 8 pairs); the threshold is configurable.
+
+### Evaluation
+- **Corpus and questions:** four arXiv papers pinned by hash, 49 questions (41 answerable: 30 factual, 4 multi-hop, 4 table, 3 cross-document; 8 unanswerable). Each answer has a verbatim evidence phrase verified on its page; unanswerable terms are verified absent.
+- **Judge:** `claude-opus-5-5` judging `claude-sonnet-5-5` answers against the sources the answer was given. The installed API rejects sampling parameters, so the judge cannot be pinned to temperature 0. Spot check: 7 of 49 verdicts (14%) read by hand, including every non-perfect one, 7 of 7 agreed. Small sample, one reader.
+- **Reading the numbers:** with 41 answerable questions one question is 0.024 and differences under about 0.05 to 0.1 are noise. Rerank improved MRR in every chunking setting. Hybrid search without reranking was not reliably better than vector search. The 1200-token sections scored best, and semantic chunking did not beat recursive chunking at the same size. **Defaults were not changed** on this evidence: the generation baseline run is missing and the gaps are within noise.
+- **Not finished:** generation runs for the baseline (800, hybrid + rerank), vector-only and semantic configurations; the recorded smoke replies (so `--smoke` cannot run yet); a clean prompt-injection run. All need a funded API key. Generation latency of the completed runs was discarded because the timer included queueing; it is fixed for future runs.
+- **CI** is Phase 6: the smoke command, `baseline.json` floors and the recording mechanism exist, but no workflow runs them.
+
+### Bugs found by running real data and real browsers this phase
+- PDF text from equations contains NUL bytes; Postgres rejected them and ingestion of the RAG paper failed. Control characters are now stripped in every parser.
+- Credentialed CORS was missing, which would have broken the refresh cookie in any browser. Fixed and tested.
+- A fresh `docker compose up` would have failed at migration 0002 (found last phase); verified again with migrations 0005 and 0006.
+- Evaluation measurement bugs of my own: a canary list that counted *describing* an attack as obeying it, and a generation timer that included queueing. Both fixed; the affected numbers were removed from the report.
+
+### Not done
+Dedupe by file hash, intent routing, MMR, embedding-model migration tooling, query-log retention, JWT key rotation, email verification and password reset, a per-user usage page in the UI (the endpoint exists), and the architecture's alerts.

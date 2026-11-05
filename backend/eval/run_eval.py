@@ -237,6 +237,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.smoke:
         ids = json.loads((ROOT / "smoke.json").read_text())["ids"]
         rec_path = ROOT / "recordings" / "smoke.json"
+        if not args.record and not rec_path.exists():
+            print("no recorded model replies yet (eval/recordings/smoke.json).\n"
+                  "Record them once with a funded API key: python -m eval.run_eval --smoke --record")
+            return 2
         answer_llm, recorder = make_llm(settings, rec_path if args.record else None, None if args.record else rec_path)
         judge_llm = answer_llm  # one recording holds both the answer and the judge replies
     elif generate:
