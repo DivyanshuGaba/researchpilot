@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+.next/
+storage/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+CLAUDE.md

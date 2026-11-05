@@ -1,0 +1,101 @@
+import hashlib
+import uuid
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.api.deps import EnqueueFn, current_user_id, db_session, enqueue_dep, settings_dep
+from app.config import Settings
+from app.models import Document, DocumentVersion
+from app.services.ingestion.parsers import sniff_type
+
+router = APIRouter(prefix="/documents", tags=["documents"])
+
+
+class DocumentOut(BaseModel):
+    id: uuid.UUID
+    title: str
+    source_type: str
+    status: str
+    page_count: int
+
+
+class UrlIn(BaseModel):
+    url: str
+
+
+def _out(d: Document) -> DocumentOut:
+    return DocumentOut(
+        id=d.id, title=d.title, source_type=d.source_type, status=d.status, page_count=d.page_count
+    )
+
+
+def _create(
+    session: Session, user_id: uuid.UUID, title: str, source_type: str, location: str, digest: str
+) -> tuple[Document, DocumentVersion]:
+    doc = Document(user_id=user_id, title=title, source_type=source_type, file_path=location)
+    session.add(doc)
+    session.flush()
+    version = DocumentVersion(document_id=doc.id, user_id=user_id, file_hash=digest)
+    session.add(version)
+    session.flush()
+    return doc, version
+
+
+@router.post("", status_code=202)
+async def upload(
+    file: UploadFile,
+    user_id: uuid.UUID = Depends(current_user_id),
+    session: Session = Depends(db_session),
+    settings: Settings = Depends(settings_dep),
+    enqueue: EnqueueFn = Depends(enqueue_dep),
+) -> DocumentOut:
+    data = await file.read(settings.max_upload_mb * 1024 * 1024 + 1)
+    if len(data) > settings.max_upload_mb * 1024 * 1024:
+        raise HTTPException(413, f"file exceeds {settings.max_upload_mb} MB")
+    kind = sniff_type(data[:8])
+    if kind is None:
+        raise HTTPException(415, "only PDF and DOCX files are supported")
+
+    # Random name, outside any served directory; the original name is only kept as the title.
+    directory = Path(settings.upload_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"{uuid.uuid4().hex}.{kind}"
+    path.write_bytes(data)
+    title = Path(file.filename or "untitled").stem
+    doc, version = _create(
+        session, user_id, title, kind, str(path), hashlib.sha256(data).hexdigest()
+    )
+    session.commit()  # job must see committed rows before it is enqueued
+    enqueue(str(version.id), str(user_id))
+    return _out(doc)
+
+
+@router.post("/url", status_code=202)
+def add_url(
+    body: UrlIn,
+    user_id: uuid.UUID = Depends(current_user_id),
+    session: Session = Depends(db_session),
+    enqueue: EnqueueFn = Depends(enqueue_dep),
+) -> DocumentOut:
+    digest = hashlib.sha256(body.url.encode()).hexdigest()
+    doc, version = _create(session, user_id, body.url, "url", body.url, digest)
+    session.commit()
+    enqueue(str(version.id), str(user_id))
+    return _out(doc)
+
+
+@router.get("")
+def list_documents(session: Session = Depends(db_session)) -> list[DocumentOut]:
+    return [_out(d) for d in session.scalars(select(Document).order_by(Document.created_at.desc()))]
+
+
+@router.get("/{document_id}")
+def get_document(document_id: uuid.UUID, session: Session = Depends(db_session)) -> DocumentOut:
+    doc = session.get(Document, document_id)
+    if doc is None:
+        raise HTTPException(404, "document not found")
+    return _out(doc)
