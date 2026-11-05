@@ -1,0 +1,130 @@
+{
+ "01b52bf641d758ef7baf18c3d8f50634adf39a185aa3700c4b842e1666e8b16c": {
+  "cr": 598,
+  "cw": 0,
+  "in": 5652,
+  "out": 159,
+  "stop": "end_turn",
+  "text": "{\"refused\": false, \"faithfulness\": 1.0, \"correctness\": \"correct\", \"relevance\": 5, \"citations\": [{\"marker\": \"c_4\", \"supports_claim\": true}, {\"marker\": \"c_4\", \"supports_claim\": true}, {\"marker\": \"c_4\", \"supports_claim\": true}], \"notes\": \"The answer gives 213M, matching the reference, and every claim, including the big-model configuration and the 65M base model, is supported by Table 3 in c_4.\"}"
+ },
+ "0f48e45d2f7629689d7c86e4a09ee66a057b3d209e7f582594cc4392348fe45c": {
+  "cr": 598,
+  "cw": 0,
+  "in": 6407,
+  "out": 202,
+  "stop": "end_turn",
+  "text": "{\"refused\": false, \"faithfulness\": 1.0, \"correctness\": \"correct\", \"relevance\": 5, \"citations\": [{\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_2\", \"supports_claim\": true}, {\"marker\": \"c_6\", \"supports_claim\": true}, {\"marker\": \"c_4\", \"supports_claim\": true}, {\"marker\": \"c_3\", \"supports_claim\": true}, {\"marker\": \"c_5\", \"supports_claim\": true}], \"notes\": \"The answer correctly identifies the U-shaped curve, and every added detail is supported by the cited sources.\"}"
+ },
+ "45b893c747f42ca8d2065cb1f38d63eead2e5deae5b3e06341ff9796c0a1625a": {
+  "cr": 598,
+  "cw": 0,
+  "in": 6215,
+  "out": 387,
+  "stop": "end_turn",
+  "text": "{\"refused\": false, \"faithfulness\": 1.0, \"correctness\": \"partial\", \"relevance\": 4, \"citations\": [{\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_4\", \"supports_claim\": true}], \"notes\": \"The answer correctly gives 110M parameters per encoder but declines to say this matches BERT-BASE's 110M, which the reference requires.\"}"
+ },
+ "493f83ff1a6bc624abbb06358f757476504b3824b63c185595ebd7e7dfa98172": {
+  "cr": 598,
+  "cw": 0,
+  "in": 6409,
+  "out": 150,
+  "stop": "end_turn",
+  "text": "{\"refused\": false, \"faithfulness\": 1.0, \"correctness\": \"correct\", \"relevance\": 5, \"citations\": [{\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_2\", \"supports_claim\": true}], \"notes\": \"The answer matches the reference: 340M vs 110M parameters (230M more, correctly derived by subtraction) and 24 vs 12 layers, all supported by c_1 and c_2.\"}"
+ },
+ "4c5a8202ac1a97348eb54bc56db69b94be508932012a55c84fc1176e4690a916": {
+  "cr": 598,
+  "cw": 0,
+  "in": 7750,
+  "out": 203,
+  "stop": "end_turn",
+  "text": "{\"refused\": true, \"faithfulness\": 1.0, \"correctness\": \"correct\", \"relevance\": 5, \"citations\": [{\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_4\", \"supports_claim\": true}, {\"marker\": \"c_5\", \"supports_claim\": true}, {\"marker\": \"c_6\", \"supports_claim\": true}, {\"marker\": \"c_3\", \"supports_claim\": true}], \"notes\": \"The answer correctly says the sources lack RAG's learning rate, which matches the reference, and it rightly declines to apply the Transformer optimizer settings to RAG.\"}"
+ },
+ "52f0e35ce7ca141efd3b198c796ddc98e79a6d8f28ed07402a5b4856a683c33e": {
+  "cr": 598,
+  "cw": 0,
+  "in": 4976,
+  "out": 248,
+  "stop": "end_turn",
+  "text": "{\"refused\": false, \"faithfulness\": 1.0, \"correctness\": \"correct\", \"relevance\": 5,\n \"citations\": [{\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_3\", \"supports_claim\": true}, {\"marker\": \"c_2\", \"supports_claim\": true}, {\"marker\": \"c_2\", \"supports_claim\": true}],\n \"notes\": \"The answer matches the reference (15% of tokens chosen; 80% [MASK], 10% random, 10% unchanged), and every added detail is supported by the cited sources.\"}"
+ },
+ "5ebed2f131bf1515d5fe142962a2eef9a6908f78bb13ed05c1c38928cd13c8e0": {
+  "cr": 0,
+  "cw": 0,
+  "in": 6314,
+  "out": 329,
+  "stop": "end_turn",
+  "text": "The authors observe a distinctive U-shaped performance curve. Models perform best when the relevant information is at the very beginning (primacy bias) or the very end (recency bias) of the input context. Performance drops significantly when the information is in the middle [c_1][c_2][c_6].\n\nSome details:\n- GPT-3.5-Turbo's multi-document QA performance can fall by more than 20% depending on position. In the worst case, in the 20- and 30-document settings, it is lower than the closed-book result of 56.1% [c_6].\n- The U-shape also appears in the synthetic key-value retrieval task for some models [c_4].\n- Encoder-decoder models are relatively robust within their training-time sequence length, but show the U-shape on longer sequences [c_3][c_4].\n- Base models without instruction fine-tuning also show the U-shape [c_4][c_5].\n- In Llama-2, the 7B models are solely recency biased, while the 13B and 70B models show the U-shape [c_5]."
+ },
+ "70b9827beff939564b83ef4de85ea5e8fc7fd9fc444e353b7b6b465a007dd26f": {
+  "cr": 0,
+  "cw": 0,
+  "in": 4930,
+  "out": 284,
+  "stop": "end_turn",
+  "text": "BERT randomly chooses 15% of the WordPiece tokens in each sequence for prediction [c_1]. Each chosen token is replaced as follows:\n\n- **80% of the time:** it is replaced with the [MASK] token.\n- **10% of the time:** it is replaced with a random token.\n- **10% of the time:** it is left unchanged [c_1].\n\nThe model then uses the final hidden vector Ti to predict the original token with cross-entropy loss [c_1].\n\nThe mixed replacement reduces the mismatch between pre-training and fine-tuning, because [MASK] never appears during fine-tuning [c_1][c_3]. Keeping some tokens unchanged biases the representation toward the actual observed word [c_2]. Random replacement affects only 1.5% of all tokens (10% of 15%), which does not seem to harm language understanding [c_2]."
+ },
+ "77104cee6e9e6c855aa9d66312177cf3b50522f03f5c36d7a0e201527372cf39": {
+  "cr": 0,
+  "cw": 0,
+  "in": 3924,
+  "out": 129,
+  "stop": "end_turn",
+  "text": "The big Transformer achieved a BLEU score of 28.4 on the WMT 2014 English-to-German task, a new state of the art. It outperformed the best previously reported models, including ensembles, by more than 2.0 BLEU [c_1]. The abstract confirms the 28.4 figure [c_2]. Training took 3.5 days on 8 P100 GPUs [c_1]."
+ },
+ "786e44aca1a64ba0c5d5fb5a4bf2211d0a30c62d8646b6f8a691a5e57fc2141c": {
+  "cr": 0,
+  "cw": 598,
+  "in": 3787,
+  "out": 154,
+  "stop": "end_turn",
+  "text": "{\"refused\": false, \"faithfulness\": 1.0, \"correctness\": \"correct\", \"relevance\": 5, \"citations\": [{\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_2\", \"supports_claim\": true}, {\"marker\": \"c_1\", \"supports_claim\": true}], \"notes\": \"The answer correctly states 28.4 BLEU, and every claim, including the margin over prior models and the training time, is supported by the cited sources.\"}"
+ },
+ "b3378216106747d5a7ad4d9b3f18a2951374c4d7d810cf393d5b991e62895476": {
+  "cr": 0,
+  "cw": 0,
+  "in": 5799,
+  "out": 124,
+  "stop": "end_turn",
+  "text": "The \"big\" Transformer in Table 3 (model variations) has 213 million parameters (listed as 213 in the \"params \u00d710^6\" column) [c_4]. The row shows N=6, dmodel=1024, dff=4096, h=16, Pdrop=0.3, and 300K training steps [c_4]. For comparison, the base model has 65 million parameters [c_4]."
+ },
+ "b7855d91cd3a36f5fee9a9cdb34de09880f26edf9a92f9ef0b10609421d00ec8": {
+  "cr": 0,
+  "cw": 0,
+  "in": 6211,
+  "out": 310,
+  "stop": "end_turn",
+  "text": "The index hot-swapping experiment showed that RAG's accuracy drops sharply when the index doesn't match the time period of the question [c_1].\n\n- **Matched indices:** RAG answered 70% correctly using the 2016 index for 2016 world leaders, and 68% using the 2018 index for 2018 world leaders [c_1].\n- **Mismatched indices:** Accuracy was low, at 12% with the 2018 index and 2016 leaders, and 4% with the 2016 index and 2018 leaders [c_1].\n\nThe setup used 82 world leaders who changed between the two dates. The 2016 index was the DrQA Wikipedia dump from December 2016, and the 2018 index was the December 2018 dump. Each was queried with the template \"Who is {position}?\" using the NQ RAG model [c_1].\n\nThe authors concluded that RAG's world knowledge can be updated by simply replacing its non-parametric memory [c_1]."
+ },
+ "bdbf5042afdc4224a7fee6baec1af8d3356f3fbb1bb60f371a4cb65504dc1254": {
+  "cr": 0,
+  "cw": 0,
+  "in": 6477,
+  "out": 172,
+  "stop": "end_turn",
+  "text": "BERT-LARGE has 340M parameters and BERT-BASE has 110M, so BERT-LARGE exceeds BERT-BASE by about 230M parameters [c_1][c_2]. The 230M figure is my subtraction of those two reported totals.\n\n- **BERT-BASE:** 12 layers (Transformer blocks), hidden size 768, 12 attention heads [c_1].\n- **BERT-LARGE:** 24 layers, hidden size 1024, 16 attention heads [c_1]."
+ },
+ "bf1d6bf9312170212f5e8f74fe447b9d5578bd98d11c5229f8f13618a9f63219": {
+  "cr": 0,
+  "cw": 0,
+  "in": 6308,
+  "out": 537,
+  "stop": "end_turn",
+  "text": "Each DPR encoder in RAG, the query encoder and the document encoder, is stated to have 110M parameters [c_1]. Both are based on BERT-BASE [c_4].\n\nThe sources don't give a separate stated size for BERT-BASE, so I can't compare the two figures. The 110M figure is how the paper describes the BERT-base encoders themselves. The document encoder is kept fixed during training and only the query encoder is fine-tuned [c_4]."
+ },
+ "efa9385bfaee45b6712ddd116becfe0cb871332227fb49b3c4d78b88df4927ff": {
+  "cr": 598,
+  "cw": 0,
+  "in": 6315,
+  "out": 199,
+  "stop": "end_turn",
+  "text": "{\"refused\": false, \"faithfulness\": 1.0, \"correctness\": \"correct\", \"relevance\": 5, \"citations\": [{\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_1\", \"supports_claim\": true}, {\"marker\": \"c_1\", \"supports_claim\": true}], \"notes\": \"The answer matches the reference on every figure (70%, 68%, 12%, 4%) and on the conclusion, and all of its claims are supported by c_1.\"}"
+ },
+ "f45c83b59ce43584f41d19ba7b4c2ee5763f5a303206516767306809040aca82": {
+  "cr": 0,
+  "cw": 0,
+  "in": 7802,
+  "out": 340,
+  "stop": "end_turn",
+  "text": "The provided sources don't say what learning rate was used to train the RAG models. The RAG excerpts cover the architecture, datasets, parameter counts (626M trainable parameters), ablations, and the number of retrieved documents, but none of them give a learning rate or optimizer settings [c_1][c_4][c_5][c_6].\n\nThe only learning rate information in the sources is a schedule with Adam (\u03b21 = 0.9, \u03b22 = 0.98, \u03f5 = 10\u207b\u2079) from the \"Attention Is All You Need\" paper [c_3]. It describes the Transformer's own training, not RAG's, so I can't apply it to RAG."
+ }
+}

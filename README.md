@@ -56,10 +56,11 @@ python -m eval.sweep                                          # retrieval grid, 
 python -m eval.sweep --skip-retrieval --generate recursive-800-hybrid_rerank,recursive-800-vector
 python -m eval.report                                         # rebuild docs/eval_results.md
 python -m eval.adversarial cache                              # semantic cache false-hit study
-python -m eval.run_eval --smoke                               # 10 questions, recorded replies (needs --record once)
+python -m eval.adversarial injection                          # prompt injection against the real model (cents)
+python -m eval.run_eval --smoke                               # 10 questions, recorded replies, free; fails below eval/baseline.json
 ```
 
-Headline retrieval result (hit@5 over 41 answerable questions): vector 0.83, hybrid + rerank 0.88 at 800-token sections and 0.93 at 1200; one question is worth 0.024, so small gaps are noise. Generation runs completed for two configurations (faithfulness about 1.0, correctness 0.87 and 0.95, refusal accuracy 1.0); the rest are waiting on API credit.
+Headline results (41 answerable questions, so one question is 0.024 and small gaps are noise): **reranking is the consistent winner**. Hybrid + rerank reached correctness 0.95 and 2% false refusals, against 0.90 / 7% for vector search and 0.87 / 7% for hybrid without reranking; retrieval hit@5 was 0.83 (vector) vs 0.88 (hybrid + rerank, 800-token sections) and 0.93 (1200). Faithfulness was about 1.0 and refusal accuracy 1.0 throughout. An answer costs about $0.012. 5 of 6 prompt-injection attacks were fully resisted by a real model, and the sixth made it refuse rather than leak. The semantic cache threshold is 0.97 because 0.95 gave a wrong-answer hit.
 
 ## Agent and study tools
 
@@ -105,6 +106,6 @@ pytest && ruff check . && mypy app
 
 ## Known limitations (Phase 1)
 
-- The confidence threshold and semantic-cache threshold come from small samples; no email verification or password reset; CI is not wired up; no intent routing (compare and agent are manual toggles); no rate limits or quotas, so the agent and study endpoints call the model on every request; `fetch_url` does not pin the connection to the validated IP (DNS rebinding gap); answers render as plain text (markdown headings show as `##`); the production Docker image for the frontend is not built yet (Phase 6); highlights are accurate for unrotated PDF pages only; scanned PDFs are rejected; DOCX and URLs report page 1.
+- The confidence threshold and semantic-cache threshold come from small samples; no email verification or password reset; CI workflow not written yet (Phase 6); no intent routing (compare and agent are manual toggles); no rate limits or quotas, so the agent and study endpoints call the model on every request; `fetch_url` does not pin the connection to the validated IP (DNS rebinding gap); answers render as plain text (markdown headings show as `##`); the production Docker image for the frontend is not built yet (Phase 6); highlights are accurate for unrotated PDF pages only; scanned PDFs are rejected; DOCX and URLs report page 1.
 
 Integration tests use the compose Postgres on host port 5433 (5432 is often taken by a local Postgres): `docker compose up -d postgres`, then `alembic upgrade head` with `MIGRATION_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5433/researchpilot`.

@@ -28,6 +28,8 @@ INJECTION_PATTERNS: dict[str, re.Pattern[str]] = {
     "delimiter_escape": re.compile(r"</?\s*(sources?|conversation|document|passage|untrusted_web_content)\b", re.IGNORECASE),
     "exfiltration": re.compile(
         r"!\[[^\]]*\]\(\s*https?://|\b(send|post|upload|forward|exfiltrate|transmit)\b[^.\n]{0,60}\b(to|at)\b[^.\n]{0,20}https?://|\bfetch_url\b[^.\n]{0,40}https?://", re.IGNORECASE),
+    "link_injection": re.compile(
+        r"\b(include|add|insert|append|embed|put)\b[^.\n]{0,40}\b(this|the following|a)\b[^.\n]{0,15}\b(link|url|image|href)\b", re.IGNORECASE),
     "tool_hijack": re.compile(r"\b(call|use|invoke|run|execute)\b[^.\n]{0,20}\b(the )?(fetch_url|calculator|search_documents|tool)\b", re.IGNORECASE),
 }
 

@@ -48,10 +48,14 @@ def retrieval_table() -> list[str]:
     return lines
 
 
+# Runs made after the generation timer stopped counting time spent queued for a concurrency slot.
+CLEAN_LATENCY = {"recursive-800-hybrid_rerank", "recursive-800-vector", "semantic-800-hybrid_rerank"}
+
+
 def generation_table() -> tuple[list[str], list[str]]:
     cols = ["faithfulness", "correctness", "relevance", "citation_precision", "refusal_accuracy", "false_refusal_rate"]
-    lines = ["| config | " + " | ".join(c.replace("_", " ") for c in cols) + " | answer $/query | judge $/query |",
-             "|---|" + "---|" * (len(cols) + 2)]
+    lines = ["| config | " + " | ".join(c.replace("_", " ") for c in cols) + " | answer $/query | judge $/query | generation p50 / p95 (ms) |",
+             "|---|" + "---|" * (len(cols) + 3)]
     missing = []
     for target in ("recursive-800-hybrid_rerank", "recursive-800-vector", "recursive-800-hybrid",
                    "recursive-1200-hybrid_rerank", "semantic-800-hybrid_rerank"):
@@ -61,8 +65,15 @@ def generation_table() -> tuple[list[str], list[str]]:
             continue
         a = r["aggregate"]
         lines.append(f"| {target} | " + " | ".join(f(a.get(c)) for c in cols)
-                     + f" | ${f(a.get('answer_cost_usd_per_query'), 4)} | ${f(a.get('judge_cost_usd_per_query'), 4)} |")
+                     + f" | ${f(a.get('answer_cost_usd_per_query'), 4)} | ${f(a.get('judge_cost_usd_per_query'), 4)} | {gen_lat(target, a)} |")
     return lines, missing
+
+
+def gen_lat(target: str, a: dict[str, Any]) -> str:
+    if target not in CLEAN_LATENCY:
+        return "n/a*"
+    g = a["latency_ms"].get("generation", {})
+    return f"{f(g.get('p50'), 0)} / {f(g.get('p95'), 0)}"
 
 
 def by_type_table(name: str) -> list[str]:
@@ -149,9 +160,10 @@ def build() -> str:
                 "re-run with `python -m eval.sweep --skip-retrieval --generate <config,...>`._", ""]
     out += [
         "Cost is per question at list prices (Sonnet 5.5 $2/$10 and Opus 5.5 $4/$20 per million tokens). "
-        "The answer cost is what a production query costs; the judge cost is evaluation overhead. Generation latency is not "
-        "reported: these runs timed generation from before the concurrency slot was acquired, so the numbers included queueing. "
-        "The timer is fixed for future runs; production latency per stage is in `query_logs` and `/admin/metrics`.", "",
+        "The answer cost is what a production query costs; the judge cost is evaluation overhead. *Generation latency "
+        "is n/a for the two earlier runs: they timed generation from before the concurrency slot was acquired, so the numbers "
+        "included queueing. The other runs use the fixed timer (4 questions in flight, so these are still higher than a single "
+        "request). Production latency per stage is in `query_logs` and `/admin/metrics`.", "",
         "## Semantic cache: wrong-answer risk vs savings", "", *cache_section(), "",
         "## Prompt injection", "", *injection_section(), "",
     ]

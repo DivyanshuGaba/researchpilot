@@ -1,0 +1,11 @@
+{
+ "note": "Floors for the CI smoke check (python -m eval.run_eval --smoke). Measured on the recorded run: hit@5 0.857, recall@5 0.714, mrr 0.655, faithfulness 1.0, correctness 0.929, refusal_accuracy 1.0, false_refusal_rate 0. Floors leave room for ordinary noise; a larger drop is a regression.",
+ "floors": {
+  "hit@5": 0.7,
+  "recall@5": 0.55,
+  "mrr": 0.45,
+  "faithfulness": 0.9,
+  "correctness": 0.75,
+  "refusal_accuracy": 1.0
+ }
+}
