@@ -80,8 +80,11 @@ class FakeLLM:
         self.script, self.converse_requests, self.delay = [], [], 0.0
         self.handler = None
         self.stop_reason = ""
+        self.error = None  # set to an exception to simulate an outage
 
     async def complete(self, req: LLMRequest) -> LLMResponse:
+        if self.error is not None and not req.system.startswith(("Rewrite", "You maintain")):
+            raise self.error
         if self.handler is not None:  # study tests: full control over every reply
             self.requests.append(req)
             return LLMResponse(self.handler(req), 10, 10)
@@ -95,6 +98,8 @@ class FakeLLM:
         return LLMResponse(self.text, 100, 20, self.stop_reason)
 
     async def stream(self, req: LLMRequest):
+        if self.error is not None:
+            raise self.error
         self.requests.append(req)
         for word in (self.text.split(" ") if self.text else []):
             yield LLMEvent("delta", text=word + " ")
@@ -151,6 +156,8 @@ def text_turn(text, tokens=(10, 5), stop_reason=""):
 
 async def _converse(self, req: ConverseRequest) -> ToolTurn:
     import asyncio
+    if self.error is not None:
+        raise self.error
     import copy
 
     # snapshot: the agent keeps mutating its messages list, a real client serializes at call time

@@ -1,5 +1,6 @@
 import uuid
 from collections.abc import Callable, Iterator
+from functools import lru_cache
 
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -59,10 +60,16 @@ def embedder_dep(settings: Settings = Depends(settings_dep)) -> Embedder:
     return get_embedder(settings)
 
 
+@lru_cache
+def _shared_client(api_key: str, max_concurrency: int) -> AnthropicClient:
+    """One client (and one concurrency limit) per process, shared by every request."""
+    return AnthropicClient(api_key, max_concurrency=max_concurrency)
+
+
 def llm_dep(settings: Settings = Depends(settings_dep)) -> LLMClient:
     if not settings.anthropic_api_key:
         raise HTTPException(503, "ANTHROPIC_API_KEY is not configured")
-    return AnthropicClient(settings.anthropic_api_key)
+    return _shared_client(settings.anthropic_api_key, settings.llm_max_concurrency)
 
 
 EnqueueFn = Callable[[str, str], None]

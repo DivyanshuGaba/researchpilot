@@ -1,8 +1,10 @@
 import hashlib
+import logging
 import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -17,11 +19,14 @@ from app.api.deps import (
     settings_dep,
 )
 from app.config import Settings
+from app.db import get_factory
 from app.models import Document, DocumentVersion
 from app.services.ingestion.parsers import sniff_type
 from app.services.limits import Limiter
+from app.services.outbox import add_ingest_event, dispatch_pending
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+log = logging.getLogger(__name__)
 
 
 class DocumentOut(BaseModel):
@@ -57,6 +62,14 @@ def _stage(session: Session, document_id: uuid.UUID) -> str:
     return ver.status if ver else ""
 
 
+async def _dispatch_now(enqueue: EnqueueFn) -> None:
+    """Best effort right after commit; the background dispatcher repairs any failure."""
+    try:
+        await run_in_threadpool(dispatch_pending, get_factory(), enqueue)
+    except Exception:
+        log.exception("immediate outbox dispatch failed; the background loop will retry")
+
+
 def _create(
     session: Session, user_id: uuid.UUID, title: str, source_type: str, location: str, digest: str
 ) -> tuple[Document, DocumentVersion]:
@@ -66,6 +79,7 @@ def _create(
     version = DocumentVersion(document_id=doc.id, user_id=user_id, file_hash=digest)
     session.add(version)
     session.flush()
+    add_ingest_event(session, version.id, user_id)  # same transaction: the job cannot be lost
     return doc, version
 
 
@@ -94,25 +108,25 @@ async def upload(
     path = directory / f"{uuid.uuid4().hex}.{kind}"
     path.write_bytes(data)
     title = Path(file.filename or "untitled").stem
-    doc, version = _create(
+    doc, _ = _create(
         session, user_id, title, kind, str(path), hashlib.sha256(data).hexdigest()
     )
-    session.commit()  # job must see committed rows before it is enqueued
-    enqueue(str(version.id), str(user_id))
+    session.commit()  # the document and its outbox row commit together
+    await _dispatch_now(enqueue)
     return _out(doc)
 
 
 @router.post("/url", status_code=202)
-def add_url(
+async def add_url(
     body: UrlIn,
     user_id: uuid.UUID = Depends(current_user_id),
     session: Session = Depends(db_session),
     enqueue: EnqueueFn = Depends(enqueue_dep),
 ) -> DocumentOut:
     digest = hashlib.sha256(body.url.encode()).hexdigest()
-    doc, version = _create(session, user_id, body.url, "url", body.url, digest)
+    doc, _ = _create(session, user_id, body.url, "url", body.url, digest)
     session.commit()
-    enqueue(str(version.id), str(user_id))
+    await _dispatch_now(enqueue)
     return _out(doc)
 
 

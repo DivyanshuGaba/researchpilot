@@ -1,10 +1,49 @@
+import asyncio
+import logging
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+import anthropic
 from anthropic import AsyncAnthropic
 
 from app.config import PRICES_PER_MTOK
+
+log = logging.getLogger(__name__)
+
+SAFE_MESSAGES = {
+    "rate_limited": "The model is busy right now. Please try again in a moment.",
+    "timeout": "The model took too long to respond. Please try again.",
+    "unavailable": "The model service is temporarily unavailable. Please try again shortly.",
+    "misconfigured": "The model service is not configured correctly. Please contact the administrator.",
+}
+
+
+class LLMUnavailable(Exception):
+    """The model call failed for a reason the caller can describe safely to a user. The message
+    never contains provider internals (request ids, keys, raw error bodies)."""
+
+    def __init__(self, kind: str, retry_after: int | None = None) -> None:
+        super().__init__(kind)
+        self.kind = kind
+        self.retry_after = retry_after
+        self.message = SAFE_MESSAGES.get(kind, SAFE_MESSAGES["unavailable"])
+
+
+def classify_error(exc: Exception) -> LLMUnavailable | None:
+    """Map an SDK exception to a safe category. None means it is not a provider failure."""
+    if isinstance(exc, anthropic.RateLimitError):
+        return LLMUnavailable("rate_limited", retry_after=30)
+    if isinstance(exc, anthropic.APITimeoutError | TimeoutError):
+        return LLMUnavailable("timeout")
+    if isinstance(exc, anthropic.AuthenticationError | anthropic.PermissionDeniedError):
+        log.error("model provider rejected our credentials")  # operator problem, not the user's
+        return LLMUnavailable("misconfigured")
+    if isinstance(exc, anthropic.APIConnectionError | anthropic.InternalServerError):
+        return LLMUnavailable("unavailable")
+    if isinstance(exc, anthropic.APIStatusError) and exc.status_code >= 500:
+        return LLMUnavailable("unavailable")
+    return None
 
 
 @dataclass
@@ -78,23 +117,36 @@ class LLMClient(Protocol):
 class AnthropicClient:
     """Thin wrapper. The SDK retries 429/5xx with backoff; we set the retry count and timeout."""
 
-    def __init__(self, api_key: str, max_retries: int = 3, timeout: float = 60.0) -> None:
+    def __init__(
+        self, api_key: str, max_retries: int = 3, timeout: float = 60.0, max_concurrency: int = 8
+    ) -> None:
         self._client = AsyncAnthropic(api_key=api_key, max_retries=max_retries, timeout=timeout)
+        # One shared ceiling on in-flight model calls, so a burst cannot exhaust the rate limit.
+        self._sem = asyncio.Semaphore(max_concurrency)
 
     def _system(self, req: LLMRequest) -> list[dict[str, object]]:
         # Static system prompt first and marked cacheable (architecture.md 5.6).
         return [{"type": "text", "text": req.system, "cache_control": {"type": "ephemeral"}}]
 
     async def stream(self, req: LLMRequest) -> AsyncIterator[LLMEvent]:
-        async with self._client.messages.stream(
-            model=req.model,
-            max_tokens=req.max_tokens,
-            system=self._system(req),  # type: ignore[arg-type]
-            messages=[{"role": "user", "content": req.user}],
-        ) as stream:
-            async for delta in stream.text_stream:
-                yield LLMEvent("delta", text=delta)
-            final = await stream.get_final_message()
+        try:
+            async with (
+                self._sem,
+                self._client.messages.stream(
+                    model=req.model,
+                    max_tokens=req.max_tokens,
+                    system=self._system(req),  # type: ignore[arg-type]
+                    messages=[{"role": "user", "content": req.user}],
+                ) as stream,
+            ):
+                async for delta in stream.text_stream:
+                    yield LLMEvent("delta", text=delta)
+                final = await stream.get_final_message()
+        except Exception as exc:
+            mapped = classify_error(exc)
+            if mapped is None:
+                raise
+            raise mapped from exc
         yield LLMEvent(
             "usage",
             input_tokens=final.usage.input_tokens,
@@ -105,12 +157,19 @@ class AnthropicClient:
         )
 
     async def complete(self, req: LLMRequest) -> LLMResponse:
-        msg = await self._client.messages.create(
-            model=req.model,
-            max_tokens=req.max_tokens,
-            system=self._system(req),  # type: ignore[arg-type]
-            messages=[{"role": "user", "content": req.user}],
-        )
+        try:
+            async with self._sem:
+                msg = await self._client.messages.create(
+                    model=req.model,
+                    max_tokens=req.max_tokens,
+                    system=self._system(req),  # type: ignore[arg-type]
+                    messages=[{"role": "user", "content": req.user}],
+                )
+        except Exception as exc:
+            mapped = classify_error(exc)
+            if mapped is None:
+                raise
+            raise mapped from exc
         text = "".join(b.text for b in msg.content if b.type == "text")
         return LLMResponse(
             text, msg.usage.input_tokens, msg.usage.output_tokens, msg.stop_reason or "",
@@ -122,13 +181,20 @@ class AnthropicClient:
         extra: dict[str, Any] = {"tools": req.tools} if req.tools else {}
         if req.tool_choice and req.tools:
             extra["tool_choice"] = req.tool_choice
-        msg = await self._client.messages.create(
-            model=req.model,
-            max_tokens=req.max_tokens,
-            system=self._system(req),  # type: ignore[arg-type]
-            messages=req.messages,  # type: ignore[arg-type]
-            **extra,
-        )
+        try:
+            async with self._sem:
+                msg = await self._client.messages.create(
+                    model=req.model,
+                    max_tokens=req.max_tokens,
+                    system=self._system(req),  # type: ignore[arg-type]
+                    messages=req.messages,  # type: ignore[arg-type]
+                    **extra,
+                )
+        except Exception as exc:
+            mapped = classify_error(exc)
+            if mapped is None:
+                raise
+            raise mapped from exc
         blocks: list[dict[str, Any]] = []
         calls: list[ToolCall] = []
         text_parts: list[str] = []

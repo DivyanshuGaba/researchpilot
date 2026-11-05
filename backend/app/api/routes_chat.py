@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from app.api.deps import chat_deps, current_user_id, enforce_rate_limit
 from app.services.chat_service import (
+    ChatLLMError,
     ChatRequestError,
     Deps,
     answer_turn,
@@ -64,9 +65,18 @@ async def chat(
     deps: Deps = Depends(chat_deps),
 ) -> ChatOut:
     _validate(body)
-    out = await answer_turn(
-        deps, user_id, body.conversation_id, body.question, body.scope_ids(), body.mode
-    )
+    try:
+        out = await answer_turn(
+            deps, user_id, body.conversation_id, body.question, body.scope_ids(), body.mode
+        )
+    except ChatLLMError as exc:
+        await record_usage(deps, user_id)
+        headers = {"Retry-After": str(exc.retry_after)} if exc.retry_after else None
+        raise HTTPException(
+            exc.status_code,
+            detail={"message": exc.message, "code": exc.kind, "closest": exc.closest},
+            headers=headers,
+        ) from exc
     result = out.answer
     conv_id, msg_id = await run_in_threadpool(
         persist_exchange, deps.open_session, user_id, body.conversation_id, body.question,

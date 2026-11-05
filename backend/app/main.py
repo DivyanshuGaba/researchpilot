@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -28,7 +29,16 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
             probe = Hit(uuid.uuid4(), uuid.uuid4(), "", 1, 1, 0.0, "warm up", "warm up")
             await run_in_threadpool(reranker.rerank, "warm up", [probe], 1)
-    yield
+    # Repair loop for the ingestion outbox (jobs whose immediate dispatch failed or crashed).
+    from app.api.deps import enqueue_dep
+    from app.db import get_factory
+    from app.services.outbox import dispatcher_loop
+
+    task = asyncio.create_task(dispatcher_loop(get_factory(), enqueue_dep()))
+    try:
+        yield
+    finally:
+        task.cancel()
 
 
 app = FastAPI(title="ResearchPilot", lifespan=lifespan)

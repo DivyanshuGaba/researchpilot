@@ -18,6 +18,7 @@ from app.schemas.study import (
     SummaryRequest,
 )
 from app.services.chat_service import Deps, record_usage
+from app.services.generation.llm_client import LLMUnavailable
 from app.services.generation.study_tools import (
     Section,
     StudyGenerationError,
@@ -31,6 +32,12 @@ log = logging.getLogger(__name__)
 
 SAFE_GENERATION_ERROR = "The model could not produce a valid result. Please try again."
 SAFE_UPSTREAM_ERROR = "The model could not be reached. Please try again."
+
+
+def _unavailable(exc: LLMUnavailable) -> HTTPException:
+    status = {"rate_limited": 429, "timeout": 504}.get(exc.kind, 503)
+    headers = {"Retry-After": str(exc.retry_after)} if exc.retry_after else None
+    return HTTPException(status, exc.message, headers=headers)
 
 
 def _load(
@@ -103,6 +110,9 @@ async def create_quiz(
     try:
         gen = await generate_quiz(deps.llm, deps.settings, sections, body.num_questions)
         await record_usage(deps, user_id)
+    except LLMUnavailable as exc:
+        await record_usage(deps, user_id)
+        raise _unavailable(exc) from exc
     except StudyGenerationError as exc:
         await record_usage(deps, user_id)
         log.warning("quiz generation failed: %s", exc)
@@ -155,6 +165,9 @@ async def create_flashcards(
     try:
         gen = await generate_flashcards(deps.llm, deps.settings, sections, body.num_cards)
         await record_usage(deps, user_id)
+    except LLMUnavailable as exc:
+        await record_usage(deps, user_id)
+        raise _unavailable(exc) from exc
     except StudyGenerationError as exc:
         await record_usage(deps, user_id)
         log.warning("flashcard generation failed: %s", exc)
@@ -241,6 +254,9 @@ async def create_summary(
             deps.llm, deps.settings, sections, cached_sections
         )
         await record_usage(deps, user_id)
+    except LLMUnavailable as exc:
+        await record_usage(deps, user_id)
+        raise _unavailable(exc) from exc
     except Exception as exc:
         log.exception("summary generation error")
         raise HTTPException(502, SAFE_UPSTREAM_ERROR) from exc

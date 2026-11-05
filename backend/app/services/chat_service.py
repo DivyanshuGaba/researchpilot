@@ -24,7 +24,7 @@ from app.models import Conversation, Document, Message
 from app.services import memory
 from app.services.embeddings import Embedder
 from app.services.generation.agent import AgentLimits, AgentResult, run_agent
-from app.services.generation.llm_client import LLMClient, Usage
+from app.services.generation.llm_client import LLMClient, LLMUnavailable, Usage
 from app.services.generation.rag_chain import (
     Citation,
     RagAnswer,
@@ -48,6 +48,25 @@ HEARTBEAT_SECONDS = 15.0
 SessionOpener = Callable[[uuid.UUID], AbstractContextManager[Session]]
 StoreFactory = Callable[[Session], VectorStore]
 StatusFn = Callable[[str], Awaitable[None]]
+
+
+class ChatLLMError(Exception):
+    """The model could not be reached. Carries the passages that were retrieved, so the user
+    still gets something useful (architecture.md section 13)."""
+
+    def __init__(self, cause: LLMUnavailable, closest: list[dict[str, Any]]) -> None:
+        super().__init__(cause.kind)
+        self.kind, self.message, self.retry_after = cause.kind, cause.message, cause.retry_after
+        self.closest = closest
+
+    @property
+    def status_code(self) -> int:
+        return {"rate_limited": 429, "timeout": 504}.get(self.kind, 503)
+
+
+def retrieved_passages(turn: Turn, limit: int = 3) -> list[dict[str, Any]]:
+    hits = [h for g in turn.groups for h in g.hits][:limit]
+    return closest_json(hits)
 
 
 class ChatRequestError(ValueError):
@@ -298,11 +317,17 @@ async def answer_turn(
 ) -> TurnAnswer:
     """Non-streaming answer for any mode (used by POST /chat)."""
     if mode == "agent":
-        res, _ = await run_agent_turn(deps, user_id, conversation_id, question, document_ids)
+        try:
+            res, _ = await run_agent_turn(deps, user_id, conversation_id, question, document_ids)
+        except LLMUnavailable as exc:
+            raise ChatLLMError(exc, []) from exc
         answer = RagAnswer(res.answer, res.citations, [], res.input_tokens, res.output_tokens)
         return TurnAnswer(answer, agent_meta(res), res.tool_log)
     turn = await prepare_turn(deps, user_id, conversation_id, question, document_ids, mode)
-    answer = await answer_question(turn, deps.llm, deps.settings, deps.settings.pipeline)
+    try:
+        answer = await answer_question(turn, deps.llm, deps.settings, deps.settings.pipeline)
+    except LLMUnavailable as exc:
+        raise ChatLLMError(exc, retrieved_passages(turn)) from exc
     return TurnAnswer(answer, turn_meta(turn), [])
 
 
@@ -391,6 +416,7 @@ async def _produce(
     config = deps.settings.pipeline
     partial: list[str] = []
     final: RagAnswer | None = None
+    turn: Turn | None = None
     started = time.perf_counter()
 
     async def status(stage: str) -> None:
@@ -446,6 +472,14 @@ async def _produce(
                     **meta,
                 },
             )
+        )
+    except LLMUnavailable as exc:
+        log.warning("chat stream: model unavailable (%s)", exc.kind)
+        await record_usage(deps, user_id)
+        if turn is not None and (passages := retrieved_passages(turn)):
+            await queue.put(sse("closest", {"passages": passages}))  # still useful without the model
+        await queue.put(
+            sse("error", {"code": exc.kind, "message": exc.message, "retry_after": exc.retry_after})
         )
     except asyncio.CancelledError:
         await asyncio.shield(record_usage(deps, user_id))  # the tokens were spent either way
