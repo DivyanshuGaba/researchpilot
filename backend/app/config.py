@@ -23,7 +23,11 @@ class PipelineConfig(BaseModel, frozen=True):
     compare_per_doc: int = 3
     history_messages: int = 6
     summarize_batch: int = 4
-    rewrite_model: str = "claude-haiku-5-5"
+    rewrite_model: str = "claude-haiku-5-5"  # also the cheap model for summary map steps
+    quiz_max_passages: int = 12
+    summary_max_sections: int = 150
+    summary_concurrency: int = 5
+    summary_reduce_tokens: int = 6000
     prompt_version: str = "v2"
 
 

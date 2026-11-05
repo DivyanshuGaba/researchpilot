@@ -77,8 +77,12 @@ class FakeLLM:
         self.text, self.rewrite, self.requests, self.rewrites = text, rewrite, [], []
         self.summaries = []
         self.script, self.converse_requests, self.delay = [], [], 0.0
+        self.handler = None
 
     async def complete(self, req: LLMRequest) -> LLMResponse:
+        if self.handler is not None:  # study tests: full control over every reply
+            self.requests.append(req)
+            return LLMResponse(self.handler(req), 10, 10)
         if req.system.startswith("You maintain"):
             self.summaries.append(req)
             return LLMResponse("SUMMARY: user is studying cell energy.", 5, 5)

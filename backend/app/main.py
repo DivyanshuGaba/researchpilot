@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import routes_auth, routes_chat, routes_documents
+from app.api import routes_auth, routes_chat, routes_documents, routes_study
 from app.config import get_settings
 
 
@@ -39,6 +39,7 @@ app.add_middleware(
 app.include_router(routes_auth.router)
 app.include_router(routes_documents.router)
 app.include_router(routes_chat.router)
+app.include_router(routes_study.router)
 
 
 @app.get("/health")

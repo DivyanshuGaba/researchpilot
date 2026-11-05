@@ -2,6 +2,7 @@
 then alembic upgrade head). Skipped when the database is unreachable."""
 
 import hashlib
+import json
 import math
 import re
 import uuid
@@ -344,5 +345,179 @@ def test_compare_mode_against_real_database(tmp_path):
         user_msg = llm.requests[-1].user
         assert user_msg.count("<document title=") == 2
         assert {c["document_title"] for c in body["citations"]} == {"Paper A", "Paper B"}
+    finally:
+        app.dependency_overrides.clear()
+
+
+# --- Phase 4: study endpoints ----------------------------------------------------------------
+
+
+def _study_setup(tmp_path, llm):
+    client = _chat_client(tmp_path, llm)
+    user = _make_user()
+    h = {"X-User-Id": str(user)}
+    pdf = tmp_path / "bio.pdf"
+    _make_pdf(pdf, PAGES)
+    up = client.post("/documents", headers=h, files={"file": ("Biology.pdf", pdf.read_bytes())})
+    assert up.status_code == 202
+    return client, h, up.json()["id"]
+
+
+def _quiz_reply(n=1):
+    qs = [
+        {
+            "question": f"Question {i} about the passage?",
+            "options": ["ATP", "DNA", "Lipids", "Water"],
+            "answer_index": 0,
+            "explanation": "Because the passage says so.",
+            "source": "s_1",
+        }
+        for i in range(n)
+    ]
+    return json.dumps({"questions": qs})
+
+
+def test_quiz_flow_persists_isolates_tenants_and_handles_errors(tmp_path):
+    from .fakes import FakeLLM
+
+    llm = FakeLLM()
+    llm.handler = lambda req: _quiz_reply(2)
+    client, h, doc_id = _study_setup(tmp_path, llm)
+    try:
+        r = client.post("/study/quizzes", headers=h, json={"document_id": doc_id, "num_questions": 2})
+        assert r.status_code == 201, r.text
+        quiz = r.json()
+        assert len(quiz["questions"]) == 2 and quiz["questions"][0]["page_start"] >= 1
+        assert quiz["questions"][0]["answer_index"] == 0
+
+        got = client.get(f"/study/quizzes/{quiz['id']}", headers=h).json()
+        assert got["id"] == quiz["id"]
+        assert [x["id"] for x in client.get(f"/study/quizzes?document_id={doc_id}", headers=h).json()] == [quiz["id"]]
+
+        other = {"X-User-Id": str(_make_user())}
+        assert client.get(f"/study/quizzes/{quiz['id']}", headers=other).status_code == 404
+        assert client.get("/study/quizzes", headers=other).json() == []
+        assert client.post("/study/quizzes", headers=other, json={"document_id": doc_id}).status_code == 404
+
+        assert client.post("/study/quizzes", headers=h, json={"document_id": doc_id, "num_questions": 99}).status_code == 422
+        assert client.post("/study/quizzes", headers=h, json={"document_id": str(uuid.uuid4())}).status_code == 404
+
+        llm.handler = lambda req: "not json at all"  # invalid twice -> safe 502
+        bad = client.post("/study/quizzes", headers=h, json={"document_id": doc_id})
+        assert bad.status_code == 502 and "valid result" in bad.json()["detail"]
+        assert "not json" not in bad.text
+
+        def boom(req):
+            raise RuntimeError("secret upstream detail")
+
+        llm.handler = boom
+        err = client.post("/study/quizzes", headers=h, json={"document_id": doc_id})
+        assert err.status_code == 502 and "secret" not in err.text
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_study_requires_a_ready_document(tmp_path):
+    from .fakes import FakeLLM
+
+    llm = FakeLLM()
+    llm.handler = lambda req: _quiz_reply()
+    client, h, doc_id = _study_setup(tmp_path, llm)
+    try:
+        user_id = uuid.UUID(h["X-User-Id"])
+        with tenant_session(user_id) as s:
+            doc = s.get(Document, uuid.UUID(doc_id))
+            assert doc is not None
+            doc.status = "processing"
+        r = client.post("/study/quizzes", headers=h, json={"document_id": doc_id})
+        assert r.status_code == 409 and "not ready" in r.json()["detail"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_flashcards_flow(tmp_path):
+    from .fakes import FakeLLM
+
+    llm = FakeLLM()
+    llm.handler = lambda req: json.dumps(
+        {"cards": [{"front": "What makes ATP?", "back": "Mitochondria", "source": "s_1"}]}
+    )
+    client, h, doc_id = _study_setup(tmp_path, llm)
+    try:
+        r = client.post("/study/flashcards", headers=h, json={"document_id": doc_id, "num_cards": 3})
+        assert r.status_code == 201, r.text
+        sets = client.get("/study/flashcards", headers=h).json()
+        assert sets[0]["cards"][0]["front"] == "What makes ATP?" and sets[0]["cards"][0]["page_start"] >= 1
+        assert client.get(f"/study/flashcards/{r.json()['id']}", headers=h).status_code == 200
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_summary_is_map_reduced_then_served_from_cache(tmp_path):
+    from .fakes import FakeLLM
+
+    def handler(req):
+        if req.system.startswith("Summarize the passage"):
+            return "A section summary."
+        return "OVERVIEW. - key point (p.2)"
+
+    llm = FakeLLM()
+    llm.handler = handler
+    client, h, doc_id = _study_setup(tmp_path, llm)
+    try:
+        first = client.post("/study/summaries", headers=h, json={"document_id": doc_id}).json()
+        assert first["cached"] is False and first["summary"].startswith("OVERVIEW")
+        assert first["meta"]["sections_summarized"] >= 1
+        calls_after_first = len(llm.requests)
+
+        second = client.post("/study/summaries", headers=h, json={"document_id": doc_id}).json()
+        assert second["cached"] is True and second["summary"] == first["summary"]
+        assert len(llm.requests) == calls_after_first  # no model calls at all
+
+        assert client.get(f"/study/summaries/{doc_id}", headers=h).json()["summary"] == first["summary"]
+        other = {"X-User-Id": str(_make_user())}
+        assert client.get(f"/study/summaries/{doc_id}", headers=other).status_code == 404
+
+        # re-ingesting makes a new chunk set: a new version must not reuse a stale summary
+        user_id = uuid.UUID(h["X-User-Id"])
+        with tenant_session(user_id) as s:
+            old = s.scalar(select(DocumentVersion).where(DocumentVersion.document_id == uuid.UUID(doc_id)))
+            assert old is not None
+            doc = s.get(Document, uuid.UUID(doc_id))
+            assert doc is not None
+            new = DocumentVersion(document_id=doc.id, user_id=user_id, file_hash="v2", version_no=2)
+            s.add(new)
+            s.flush()
+            ingest_version(s, new.id, HashEmbedder(), PipelineConfig())
+        third = client.post("/study/summaries", headers=h, json={"document_id": doc_id}).json()
+        assert third["cached"] is False  # v2 has no cache yet
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_agent_search_tool_against_real_database(tmp_path):
+    """End to end: the agent's search_documents tool uses real retrieval, tenancy and gating."""
+    from .fakes import FakeLLM, text_turn, tool_turn
+
+    llm = FakeLLM()
+    llm.script = [
+        tool_turn(("search_documents", {"query": "How does photosynthesis make glucose"}),
+                  ("calculator", {"expression": "2 * 21"})),
+        text_turn("Chloroplasts make glucose [c_1]; the sum is 42."),
+    ]
+    client, h, _ = _study_setup(tmp_path, llm)
+    try:
+        body = client.post(
+            "/chat", headers=h, json={"question": "How does photosynthesis make glucose? Also 2*21?", "mode": "agent"}
+        ).json()
+        assert [t["name"] for t in body["meta"]["tool_calls"]] == ["search_documents", "calculator"]
+        assert body["citations"] and body["citations"][0]["page_start"] == 3
+        tool_result = llm.converse_requests[1].messages[-1]["content"][0]["content"]
+        assert "<source id=\"c_1\"" in tool_result and "Photosynthesis" in tool_result
+        # another user's agent finds nothing in these documents
+        llm.script = [tool_turn(("search_documents", {"query": "photosynthesis glucose"})), text_turn("none")]
+        other = {"X-User-Id": str(_make_user())}
+        client.post("/chat", headers=other, json={"question": "photosynthesis?", "mode": "agent"})
+        assert "No relevant passages" in llm.converse_requests[-1].messages[-1]["content"][0]["content"]
     finally:
         app.dependency_overrides.clear()
