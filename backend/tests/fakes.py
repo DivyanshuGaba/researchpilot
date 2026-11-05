@@ -73,6 +73,18 @@ class FakeReranker:
         return sorted(scored, key=lambda h: -h.score)[:top_n]
 
 
+class OverlapReranker:
+    """Query-aware: 0.9 when the passage shares a word (4+ letters) with the query, else 0.01."""
+
+    def rerank(self, query, hits, top_n):
+        words = {w for w in query.lower().replace("?", " ").split() if len(w) > 3}
+        scored = [
+            dataclasses.replace(h, score=0.9 if any(w in h.child_text.lower() for w in words) else 0.01)
+            for h in hits
+        ]
+        return sorted(scored, key=lambda h: -h.score)[:top_n]
+
+
 class FakeLLM:
     def __init__(self, text="ATP comes from mitochondria [c_1].", rewrite="standalone question"):
         self.text, self.rewrite, self.requests, self.rewrites = text, rewrite, [], []

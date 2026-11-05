@@ -1,3 +1,4 @@
+import time
 import uuid
 from typing import Any, Literal
 
@@ -12,9 +13,11 @@ from app.services.chat_service import (
     ChatRequestError,
     Deps,
     answer_turn,
+    finish_turn,
     persist_exchange,
     record_usage,
     stream_chat,
+    usage_of,
     validate_request,
 )
 
@@ -65,12 +68,17 @@ async def chat(
     deps: Deps = Depends(chat_deps),
 ) -> ChatOut:
     _validate(body)
+    started = time.perf_counter()
     try:
         out = await answer_turn(
             deps, user_id, body.conversation_id, body.question, body.scope_ids(), body.mode
         )
     except ChatLLMError as exc:
         await record_usage(deps, user_id)
+        await finish_turn(
+            deps, user_id, body.mode, body.question, "", exc.turn,
+            int((time.perf_counter() - started) * 1000), error=exc.kind,
+        )
         headers = {"Retry-After": str(exc.retry_after)} if exc.retry_after else None
         raise HTTPException(
             exc.status_code,
@@ -78,12 +86,19 @@ async def chat(
             headers=headers,
         ) from exc
     result = out.answer
+    usage = usage_of(deps)
+    latency_ms = int((time.perf_counter() - started) * 1000)
     conv_id, msg_id = await run_in_threadpool(
         persist_exchange, deps.open_session, user_id, body.conversation_id, body.question,
-        result.answer, result.citations, result.input_tokens, result.output_tokens, False,
-        out.tool_calls,
+        result.answer, result.citations, usage.input_tokens or result.input_tokens,
+        usage.output_tokens or result.output_tokens, False, out.tool_calls, latency_ms,
+        usage.cost_usd,
     )
     await record_usage(deps, user_id)
+    await finish_turn(
+        deps, user_id, body.mode, body.question, result.answer, out.turn, latency_ms,
+        conv_id, msg_id,
+    )
     return ChatOut(
         conversation_id=conv_id,
         message_id=msg_id,

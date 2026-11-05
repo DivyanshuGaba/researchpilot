@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://rp_app:rp_app@localhost:5432/researchpilot"
     migration_database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/researchpilot"
     redis_url: str = "redis://localhost:6379/0"
+    # Read-only role that may see all tenants, used only by the admin metrics endpoint.
+    metrics_database_url: str = "postgresql+psycopg://rp_metrics:rp_metrics@localhost:5432/researchpilot"
     embedding_provider: str = "local"
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     embedding_dim: int = 384

@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import routes_auth, routes_chat, routes_documents, routes_study
+from app.api import routes_admin, routes_auth, routes_chat, routes_documents, routes_study
 from app.config import get_settings
 from app.services.auth import assert_safe_config
 from app.services.guardrails import install_log_redaction
@@ -54,6 +54,7 @@ app.include_router(routes_auth.router)
 app.include_router(routes_documents.router)
 app.include_router(routes_chat.router)
 app.include_router(routes_study.router)
+app.include_router(routes_admin.router)
 
 
 @app.get("/health")

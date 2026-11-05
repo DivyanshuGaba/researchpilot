@@ -36,6 +36,7 @@ from app.services.generation.rag_chain import (
 )
 from app.services.generation.tools import ToolBox
 from app.services.limits import Limiter
+from app.services.observability import QueryRecord, Tracer, config_hash, write_query_log
 from app.services.retrieval.query_rewrite import rewrite_query
 from app.services.retrieval.reranker import Reranker
 from app.services.retrieval.service import Retrieval, finalize, gather_candidates
@@ -54,8 +55,11 @@ class ChatLLMError(Exception):
     """The model could not be reached. Carries the passages that were retrieved, so the user
     still gets something useful (architecture.md section 13)."""
 
-    def __init__(self, cause: LLMUnavailable, closest: list[dict[str, Any]]) -> None:
+    def __init__(
+        self, cause: LLMUnavailable, closest: list[dict[str, Any]], turn: Turn | None = None
+    ) -> None:
         super().__init__(cause.kind)
+        self.turn = turn
         self.kind, self.message, self.retry_after = cause.kind, cause.message, cause.retry_after
         self.closest = closest
 
@@ -305,6 +309,7 @@ class TurnAnswer:
     answer: RagAnswer
     meta: dict[str, Any]
     tool_calls: list[dict[str, Any]]
+    turn: Turn | None = None
 
 
 async def answer_turn(
@@ -318,17 +323,67 @@ async def answer_turn(
     """Non-streaming answer for any mode (used by POST /chat)."""
     if mode == "agent":
         try:
-            res, _ = await run_agent_turn(deps, user_id, conversation_id, question, document_ids)
+            res, agent_turn = await run_agent_turn(deps, user_id, conversation_id, question, document_ids)
         except LLMUnavailable as exc:
             raise ChatLLMError(exc, []) from exc
         answer = RagAnswer(res.answer, res.citations, [], res.input_tokens, res.output_tokens)
-        return TurnAnswer(answer, agent_meta(res), res.tool_log)
+        return TurnAnswer(answer, agent_meta(res), res.tool_log, agent_turn)
     turn = await prepare_turn(deps, user_id, conversation_id, question, document_ids, mode)
+    t = time.perf_counter()
     try:
         answer = await answer_question(turn, deps.llm, deps.settings, deps.settings.pipeline)
     except LLMUnavailable as exc:
-        raise ChatLLMError(exc, retrieved_passages(turn)) from exc
-    return TurnAnswer(answer, turn_meta(turn), [])
+        raise ChatLLMError(exc, retrieved_passages(turn), turn) from exc
+    turn.timings_ms["generation"] = _ms(t)
+    return TurnAnswer(answer, turn_meta(turn), [], turn)
+
+
+async def finish_turn(
+    deps: Deps,
+    user_id: uuid.UUID,
+    mode: str,
+    question: str,
+    answer: str,
+    turn: Turn | None,
+    latency_ms: int,
+    conversation_id: uuid.UUID | None = None,
+    message_id: uuid.UUID | None = None,
+    cache_status: str = "miss",
+    error: str | None = None,
+) -> None:
+    """Query log + optional trace for one finished request. Best effort, never raises."""
+    try:
+        usage = usage_of(deps)
+        cfg = deps.settings.pipeline
+        hits = [h for g in turn.groups for h in g.hits] if turn else []
+        rec = QueryRecord(
+            user_id=user_id, mode=mode, config_hash=config_hash(cfg, mode=mode),
+            message_id=message_id, conversation_id=conversation_id,
+            rewritten_query=(turn.standalone if turn else "") or question,
+            retrieved_chunk_ids=[str(h.key) for h in hits],
+            top_score=turn.top_score if turn else None,
+            gated=bool(turn and turn.gated), cache_status=cache_status, latency_ms=latency_ms,
+            latency_breakdown=dict(turn.timings_ms) if turn else {},
+            tokens_in=usage.input_tokens, tokens_out=usage.output_tokens,
+            cache_read_tokens=usage.cache_read_tokens, cost_usd=usage.cost_usd,
+            degraded=list(turn.degraded) if turn else [], error=error,
+        )
+        await run_in_threadpool(
+            write_query_log, deps.open_session, rec, deps.settings.mask_pii_in_logs
+        )
+        _tracer(deps.settings).trace(rec, question, answer, deps.settings.llm_model)
+    except Exception:
+        log.exception("finish_turn failed (ignored)")
+
+
+_tracers: dict[int, Tracer] = {}
+
+
+def _tracer(settings: Settings) -> Tracer:
+    key = id(settings)
+    if key not in _tracers:
+        _tracers[key] = Tracer(settings)
+    return _tracers[key]
 
 
 def persist_exchange(
@@ -342,6 +397,8 @@ def persist_exchange(
     output_tokens: int,
     incomplete: bool,
     tool_calls: list[dict[str, Any]] | None = None,
+    latency_ms: int | None = None,
+    cost_usd: float | None = None,
 ) -> tuple[uuid.UUID, uuid.UUID]:
     with open_session(user_id) as session:
         conv = session.get(Conversation, conversation_id) if conversation_id else None
@@ -360,6 +417,8 @@ def persist_exchange(
             output_tokens=output_tokens,
             incomplete=incomplete,
             tool_calls=tool_calls or [],
+            latency_ms=latency_ms,
+            cost_usd=cost_usd,
         )
         session.add(reply)
         session.flush()
@@ -429,7 +488,7 @@ async def _produce(
             async def emit(ev: StreamEvent) -> None:
                 await queue.put(sse(ev.event, ev.data))
 
-            res, _turn = await run_agent_turn(
+            res, turn = await run_agent_turn(
                 deps, user_id, conversation_id, question, document_ids, emit
             )
             # The agent loop is not token-streamed: tools run first, then the answer arrives whole.
@@ -443,6 +502,7 @@ async def _produce(
             turn = await prepare_turn(
                 deps, user_id, conversation_id, question, document_ids, mode, status
             )
+            gen_started = time.perf_counter()
             async for item in stream_answer(turn, deps.llm, deps.settings, config):
                 if isinstance(item, RagAnswer):
                     final = item
@@ -450,14 +510,20 @@ async def _produce(
                     if item.event == "token":
                         partial.append(str(item.data["text"]))
                     await queue.put(sse(item.event, item.data))
+            turn.timings_ms["generation"] = _ms(gen_started)
             meta = turn_meta(turn)
         assert final is not None
+        usage = usage_of(deps)
         conv_id, msg_id = await run_in_threadpool(
             persist_exchange, deps.open_session, user_id, conversation_id, question,
-            final.answer, final.citations, final.input_tokens, final.output_tokens, False,
-            tool_calls,
+            final.answer, final.citations, usage.input_tokens or final.input_tokens,
+            usage.output_tokens or final.output_tokens, False, tool_calls, _ms(started),
+            usage.cost_usd,
         )
         await record_usage(deps, user_id)
+        await finish_turn(
+            deps, user_id, mode, question, final.answer, turn, _ms(started), conv_id, msg_id
+        )
         await queue.put(
             sse(
                 "done",
@@ -476,6 +542,9 @@ async def _produce(
     except LLMUnavailable as exc:
         log.warning("chat stream: model unavailable (%s)", exc.kind)
         await record_usage(deps, user_id)
+        await finish_turn(
+            deps, user_id, mode, question, "", turn, _ms(started), error=exc.kind
+        )
         if turn is not None and (passages := retrieved_passages(turn)):
             await queue.put(sse("closest", {"passages": passages}))  # still useful without the model
         await queue.put(
