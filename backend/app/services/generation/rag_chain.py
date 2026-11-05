@@ -1,6 +1,8 @@
 import re
 import uuid
-from dataclasses import dataclass, field
+from collections.abc import AsyncIterator
+from dataclasses import asdict, dataclass, field
+from typing import Any
 
 from app.config import PipelineConfig, Settings
 from app.services.generation.llm_client import LLMClient, LLMRequest
@@ -23,6 +25,13 @@ class Citation:
     document_title: str
     page_start: int
     page_end: int
+    quote: str = ""
+    bbox_list: list[Any] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        d = asdict(self)
+        d["chunk_id"], d["document_id"] = str(self.chunk_id), str(self.document_id)
+        return d
 
 
 @dataclass
@@ -31,6 +40,14 @@ class RagAnswer:
     citations: list[Citation] = field(default_factory=list)
     input_tokens: int = 0
     output_tokens: int = 0
+
+
+@dataclass
+class StreamEvent:
+    """One SSE event. `event` is the SSE event name, `data` is JSON-serializable."""
+
+    event: str
+    data: dict[str, Any]
 
 
 def pack_context(hits: list[Hit]) -> tuple[list[str], dict[str, Hit]]:
@@ -60,14 +77,30 @@ def validate_citations(answer: str, by_marker: dict[str, Hit]) -> tuple[str, lis
         cited.setdefault(
             marker,
             Citation(
-                marker, hit.chunk_id, hit.document_id, hit.document_title,
-                hit.page_start, hit.page_end,
+                marker,
+                hit.chunk_id,
+                hit.document_id,
+                hit.document_title,
+                hit.page_start,
+                hit.page_end,
+                quote=hit.child_text,
+                bbox_list=hit.bbox_list,
             ),
         )
         return match.group(0)
 
     cleaned = _MARKER.sub(keep, answer)
     return re.sub(r"[ \t]+([.,;])", r"\1", cleaned), list(cited.values())
+
+
+def _request(
+    question: str, rendered: list[str], settings: Settings, config: PipelineConfig
+) -> LLMRequest:
+    return LLMRequest(
+        system=PROMPTS[config.prompt_version],
+        user=build_user_message(question, rendered),
+        model=settings.llm_model,
+    )
 
 
 async def answer_question(
@@ -80,12 +113,37 @@ async def answer_question(
     if not hits:
         return RagAnswer(INSUFFICIENT_CONTEXT_MESSAGE)
     rendered, by_marker = pack_context(hits)
-    resp = await llm.complete(
-        LLMRequest(
-            system=PROMPTS[config.prompt_version],
-            user=build_user_message(question, rendered),
-            model=settings.llm_model,
-        )
-    )
+    resp = await llm.complete(_request(question, rendered, settings, config))
     text, citations = validate_citations(resp.text, by_marker)
     return RagAnswer(text, citations, resp.input_tokens, resp.output_tokens)
+
+
+async def stream_answer(
+    question: str,
+    hits: list[Hit],
+    llm: LLMClient,
+    settings: Settings,
+    config: PipelineConfig,
+) -> AsyncIterator[StreamEvent | RagAnswer]:
+    """Yield token and citation events, then the final RagAnswer (not an SSE event itself).
+
+    Raw tokens may contain markers that are later dropped; the final answer is authoritative.
+    """
+    if not hits:
+        yield StreamEvent("token", {"text": INSUFFICIENT_CONTEXT_MESSAGE})
+        yield RagAnswer(INSUFFICIENT_CONTEXT_MESSAGE)
+        return
+    rendered, by_marker = pack_context(hits)
+    yield StreamEvent("status", {"stage": "writing"})
+    raw: list[str] = []
+    in_tokens = out_tokens = 0
+    async for ev in llm.stream(_request(question, rendered, settings, config)):
+        if ev.kind == "delta":
+            raw.append(ev.text)
+            yield StreamEvent("token", {"text": ev.text})
+        elif ev.kind == "usage":
+            in_tokens, out_tokens = ev.input_tokens, ev.output_tokens
+    text, citations = validate_citations("".join(raw), by_marker)
+    for c in citations:
+        yield StreamEvent("citation", c.to_json())
+    yield RagAnswer(text, citations, in_tokens, out_tokens)

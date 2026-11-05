@@ -1,7 +1,9 @@
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -10,11 +12,14 @@ from app.api.deps import (
     db_session,
     embedder_dep,
     llm_dep,
+    session_opener_dep,
     settings_dep,
+    store_factory_dep,
     vector_store_dep,
 )
 from app.config import Settings
 from app.models import Conversation, Message
+from app.services.chat_service import SessionOpener, StoreFactory, stream_chat
 from app.services.embeddings import Embedder
 from app.services.generation.llm_client import LLMClient
 from app.services.generation.rag_chain import answer_question
@@ -36,6 +41,8 @@ class CitationOut(BaseModel):
     document_title: str
     page_start: int
     page_end: int
+    quote: str = ""
+    bbox_list: list[Any] = []
 
 
 class ChatOut(BaseModel):
@@ -81,10 +88,7 @@ async def chat(
             user_id=user_id,
             role="assistant",
             content=result.answer,
-            citations=[
-                {**c.__dict__, "chunk_id": str(c.chunk_id), "document_id": str(c.document_id)}
-                for c in result.citations
-            ],
+            citations=[c.to_json() for c in result.citations],
             input_tokens=result.input_tokens,
             output_tokens=result.output_tokens,
         )
@@ -98,4 +102,34 @@ async def chat(
         message_id=msg_id,
         answer=result.answer,
         citations=[CitationOut(**c.__dict__) for c in result.citations],
+    )
+
+
+@router.post("/chat/stream")
+async def chat_stream(
+    body: ChatIn,
+    user_id: uuid.UUID = Depends(current_user_id),
+    open_session: SessionOpener = Depends(session_opener_dep),
+    make_store: StoreFactory = Depends(store_factory_dep),
+    embedder: Embedder = Depends(embedder_dep),
+    llm: LLMClient = Depends(llm_dep),
+    settings: Settings = Depends(settings_dep),
+) -> StreamingResponse:
+    if not body.question.strip():
+        raise HTTPException(422, "question is empty")
+    events = stream_chat(
+        user_id=user_id,
+        question=body.question,
+        conversation_id=body.conversation_id,
+        document_ids=tuple(body.document_ids) if body.document_ids else None,
+        open_session=open_session,
+        make_store=make_store,
+        embedder=embedder,
+        llm=llm,
+        settings=settings,
+    )
+    return StreamingResponse(
+        events,
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

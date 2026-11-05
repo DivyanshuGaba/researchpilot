@@ -187,6 +187,12 @@ def test_upload_and_chat_end_to_end(tmp_path):
         def __init__(self):
             self.req = None
 
+        async def stream(self, req: LLMRequest):
+            from app.services.generation.llm_client import LLMEvent
+
+            yield LLMEvent("delta", text="Chloroplasts make glucose [c_1].")
+            yield LLMEvent("usage", input_tokens=5, output_tokens=3)
+
         async def complete(self, req: LLMRequest) -> LLMResponse:
             self.req = req
             return LLMResponse("Chloroplasts convert light into glucose [c_1].", 50, 10)
@@ -222,6 +228,21 @@ def test_upload_and_chat_end_to_end(tmp_path):
         assert client.get("/documents", headers=other).json() == []
         r2 = client.post("/chat", headers=other, json={"question": "what do chloroplasts do?"})
         assert r2.json()["citations"] == [] and llm.req is None
+
+        # authenticated file access: owner gets the PDF, another tenant gets 404
+        doc_id = listed[0]["id"]
+        f = client.get(f"/documents/{doc_id}/file", headers=h)
+        assert f.status_code == 200 and f.content.startswith(b"%PDF")
+        assert client.get(f"/documents/{doc_id}/file", headers=other).status_code == 404
+        assert client.get(f"/documents/{doc_id}", headers=h).json()["stage"] == "ready"
+
+        # streaming path against the real database
+        with client.stream(
+            "POST", "/chat/stream", headers=h, json={"question": "what do chloroplasts do with light?"}
+        ) as resp:
+            body = "".join(resp.iter_text())
+        assert "event: citation" in body and "event: done" in body
+        assert '"page_start": 3' in body and "bbox_list" in body
 
         bad = client.post("/documents", headers=h, files={"file": ("x.exe", b"MZ\x90\x00")})
         assert bad.status_code == 415

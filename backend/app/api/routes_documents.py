@@ -3,6 +3,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -20,6 +21,7 @@ class DocumentOut(BaseModel):
     title: str
     source_type: str
     status: str
+    stage: str = ""
     page_count: int
 
 
@@ -27,10 +29,24 @@ class UrlIn(BaseModel):
     url: str
 
 
-def _out(d: Document) -> DocumentOut:
+def _out(d: Document, stage: str = "") -> DocumentOut:
     return DocumentOut(
-        id=d.id, title=d.title, source_type=d.source_type, status=d.status, page_count=d.page_count
+        id=d.id,
+        title=d.title,
+        source_type=d.source_type,
+        status=d.status,
+        stage=stage,
+        page_count=d.page_count,
     )
+
+
+def _stage(session: Session, document_id: uuid.UUID) -> str:
+    ver = session.scalar(
+        select(DocumentVersion)
+        .where(DocumentVersion.document_id == document_id)
+        .order_by(DocumentVersion.version_no.desc())
+    )
+    return ver.status if ver else ""
 
 
 def _create(
@@ -90,7 +106,8 @@ def add_url(
 
 @router.get("")
 def list_documents(session: Session = Depends(db_session)) -> list[DocumentOut]:
-    return [_out(d) for d in session.scalars(select(Document).order_by(Document.created_at.desc()))]
+    docs = session.scalars(select(Document).order_by(Document.created_at.desc()))
+    return [_out(d, _stage(session, d.id)) for d in docs]
 
 
 @router.get("/{document_id}")
@@ -98,4 +115,13 @@ def get_document(document_id: uuid.UUID, session: Session = Depends(db_session))
     doc = session.get(Document, document_id)
     if doc is None:
         raise HTTPException(404, "document not found")
-    return _out(doc)
+    return _out(doc, _stage(session, doc.id))
+
+
+@router.get("/{document_id}/file")
+def get_file(document_id: uuid.UUID, session: Session = Depends(db_session)) -> FileResponse:
+    """Authenticated file access (RLS hides other tenants' rows, so they get a 404)."""
+    doc = session.get(Document, document_id)
+    if doc is None or doc.source_type != "pdf" or not Path(doc.file_path).is_file():
+        raise HTTPException(404, "file not found")
+    return FileResponse(doc.file_path, media_type="application/pdf")

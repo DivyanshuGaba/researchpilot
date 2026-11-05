@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
 from app.db import tenant_session
+from app.services.chat_service import SessionOpener, StoreFactory
 from app.services.embeddings import Embedder, get_embedder
 from app.services.generation.llm_client import AnthropicClient, LLMClient
 from app.services.vectorstore import PgVectorStore, VectorStore
@@ -22,6 +23,14 @@ def current_user_id(x_user_id: str = Header(...)) -> uuid.UUID:
 def db_session(user_id: uuid.UUID = Depends(current_user_id)) -> Iterator[Session]:
     with tenant_session(user_id) as session:
         yield session
+
+
+def session_opener_dep() -> SessionOpener:
+    return tenant_session
+
+
+def store_factory_dep() -> StoreFactory:
+    return PgVectorStore
 
 
 def vector_store_dep(session: Session = Depends(db_session)) -> VectorStore:

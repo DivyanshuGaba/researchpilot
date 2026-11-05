@@ -1,6 +1,6 @@
 import uuid
-from dataclasses import dataclass
-from typing import Protocol
+from dataclasses import dataclass, field
+from typing import Any, Protocol
 
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
@@ -26,6 +26,7 @@ class Hit:
     score: float
     child_text: str
     parent_text: str
+    bbox_list: list[Any] = field(default_factory=list)
 
 
 class VectorStore(Protocol):
@@ -68,6 +69,7 @@ class PgVectorStore:
                 score=1.0 - float(d),
                 child_text=c.content,
                 parent_text=parents.get(c.parent_id, c.content) if c.parent_id else c.content,
+                bbox_list=list(c.bbox_list or []),
             )
             for c, title, d in rows
         ]
