@@ -7,7 +7,7 @@ from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
-from app.api.deps import chat_deps, current_user_id
+from app.api.deps import chat_deps, current_user_id, enforce_rate_limit
 from app.models import Chunk, Document, DocumentVersion, FlashcardSet, Quiz, Summary
 from app.schemas.study import (
     FlashcardRequest,
@@ -17,7 +17,7 @@ from app.schemas.study import (
     SummaryOut,
     SummaryRequest,
 )
-from app.services.chat_service import Deps
+from app.services.chat_service import Deps, record_usage
 from app.services.generation.study_tools import (
     Section,
     StudyGenerationError,
@@ -93,7 +93,7 @@ def _cards_out(row: FlashcardSet) -> FlashcardSetOut:
     )
 
 
-@router.post("/quizzes", status_code=201)
+@router.post("/quizzes", status_code=201, dependencies=[Depends(enforce_rate_limit)])
 async def create_quiz(
     body: QuizRequest, user_id: uuid.UUID = Depends(current_user_id), deps: Deps = Depends(chat_deps)
 ) -> QuizOut:
@@ -102,7 +102,9 @@ async def create_quiz(
     )
     try:
         gen = await generate_quiz(deps.llm, deps.settings, sections, body.num_questions)
+        await record_usage(deps, user_id)
     except StudyGenerationError as exc:
+        await record_usage(deps, user_id)
         log.warning("quiz generation failed: %s", exc)
         raise HTTPException(502, SAFE_GENERATION_ERROR) from exc
     except Exception as exc:
@@ -141,7 +143,7 @@ def get_quiz(
         return _quiz_out(row)
 
 
-@router.post("/flashcards", status_code=201)
+@router.post("/flashcards", status_code=201, dependencies=[Depends(enforce_rate_limit)])
 async def create_flashcards(
     body: FlashcardRequest,
     user_id: uuid.UUID = Depends(current_user_id),
@@ -152,7 +154,9 @@ async def create_flashcards(
     )
     try:
         gen = await generate_flashcards(deps.llm, deps.settings, sections, body.num_cards)
+        await record_usage(deps, user_id)
     except StudyGenerationError as exc:
+        await record_usage(deps, user_id)
         log.warning("flashcard generation failed: %s", exc)
         raise HTTPException(502, SAFE_GENERATION_ERROR) from exc
     except Exception as exc:
@@ -220,7 +224,7 @@ def _save_summaries(
         s.execute(insert(Summary).values(rows).on_conflict_do_nothing())
 
 
-@router.post("/summaries")
+@router.post("/summaries", dependencies=[Depends(enforce_rate_limit)])
 async def create_summary(
     body: SummaryRequest, user_id: uuid.UUID = Depends(current_user_id), deps: Deps = Depends(chat_deps)
 ) -> SummaryOut:
@@ -236,6 +240,7 @@ async def create_summary(
         summary, section_map, truncated = await summarize_document(
             deps.llm, deps.settings, sections, cached_sections
         )
+        await record_usage(deps, user_id)
     except Exception as exc:
         log.exception("summary generation error")
         raise HTTPException(502, SAFE_UPSTREAM_ERROR) from exc

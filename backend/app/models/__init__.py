@@ -7,7 +7,10 @@ from app.models.tables import (
     FlashcardSet,
     IngestionJob,
     Message,
+    OutboxEvent,
+    QueryLog,
     Quiz,
+    RefreshToken,
     Summary,
     User,
 )
@@ -21,7 +24,10 @@ __all__ = [
     "FlashcardSet",
     "IngestionJob",
     "Message",
+    "OutboxEvent",
+    "QueryLog",
     "Quiz",
+    "RefreshToken",
     "Summary",
     "User",
 ]

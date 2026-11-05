@@ -4,6 +4,8 @@ from typing import Any, Protocol
 
 from anthropic import AsyncAnthropic
 
+from app.config import PRICES_PER_MTOK
+
 
 @dataclass
 class LLMRequest:
@@ -19,6 +21,8 @@ class LLMResponse:
     input_tokens: int
     output_tokens: int
     stop_reason: str = ""
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
 
 
 @dataclass
@@ -30,6 +34,8 @@ class LLMEvent:
     input_tokens: int = 0
     output_tokens: int = 0
     stop_reason: str = ""
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
 
 
 @dataclass
@@ -59,6 +65,8 @@ class ToolTurn:
     input_tokens: int = 0
     output_tokens: int = 0
     stop_reason: str = ""
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
 
 
 class LLMClient(Protocol):
@@ -92,6 +100,8 @@ class AnthropicClient:
             input_tokens=final.usage.input_tokens,
             output_tokens=final.usage.output_tokens,
             stop_reason=final.stop_reason or "",
+            cache_read_tokens=getattr(final.usage, "cache_read_input_tokens", 0) or 0,
+            cache_write_tokens=getattr(final.usage, "cache_creation_input_tokens", 0) or 0,
         )
 
     async def complete(self, req: LLMRequest) -> LLMResponse:
@@ -103,7 +113,9 @@ class AnthropicClient:
         )
         text = "".join(b.text for b in msg.content if b.type == "text")
         return LLMResponse(
-            text, msg.usage.input_tokens, msg.usage.output_tokens, msg.stop_reason or ""
+            text, msg.usage.input_tokens, msg.usage.output_tokens, msg.stop_reason or "",
+            getattr(msg.usage, "cache_read_input_tokens", 0) or 0,
+            getattr(msg.usage, "cache_creation_input_tokens", 0) or 0,
         )
 
     async def converse(self, req: ConverseRequest) -> ToolTurn:
@@ -131,4 +143,66 @@ class AnthropicClient:
         return ToolTurn(
             "".join(text_parts), calls, blocks, msg.usage.input_tokens, msg.usage.output_tokens,
             msg.stop_reason or "",
+            getattr(msg.usage, "cache_read_input_tokens", 0) or 0,
+            getattr(msg.usage, "cache_creation_input_tokens", 0) or 0,
         )
+
+
+@dataclass
+class Usage:
+    """Token and cost totals across every model call made for one request."""
+
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
+    cost_usd: float = 0.0
+    calls: int = 0
+
+    @property
+    def total_tokens(self) -> int:
+        return self.input_tokens + self.output_tokens + self.cache_read_tokens + self.cache_write_tokens
+
+
+def cost_usd(model: str, inp: int, out: int, cache_read: int = 0, cache_write: int = 0) -> float:
+    """Cache reads bill at 0.1x the input price and cache writes at 1.25x (5 minute TTL)."""
+    price = PRICES_PER_MTOK.get(model)
+    if price is None:
+        return 0.0
+    pin, pout = price
+    return (inp * pin + out * pout + cache_read * pin * 0.1 + cache_write * pin * 1.25) / 1_000_000
+
+
+class MeteredLLM:
+    """Wraps any LLMClient and totals usage and cost, so a request knows what it spent."""
+
+    def __init__(self, inner: LLMClient) -> None:
+        self.inner = inner
+        self.usage = Usage()
+
+    def _add(self, model: str, r: Any) -> None:
+        u = self.usage
+        u.input_tokens += r.input_tokens
+        u.output_tokens += r.output_tokens
+        u.cache_read_tokens += r.cache_read_tokens
+        u.cache_write_tokens += r.cache_write_tokens
+        u.cost_usd += cost_usd(
+            model, r.input_tokens, r.output_tokens, r.cache_read_tokens, r.cache_write_tokens
+        )
+        u.calls += 1
+
+    async def complete(self, req: LLMRequest) -> LLMResponse:
+        resp = await self.inner.complete(req)
+        self._add(req.model, resp)
+        return resp
+
+    async def converse(self, req: ConverseRequest) -> ToolTurn:
+        turn = await self.inner.converse(req)
+        self._add(req.model, turn)
+        return turn
+
+    async def stream(self, req: LLMRequest) -> AsyncIterator[LLMEvent]:
+        async for ev in self.inner.stream(req):
+            if ev.kind == "usage":
+                self._add(req.model, ev)
+            yield ev

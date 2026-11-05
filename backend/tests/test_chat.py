@@ -7,10 +7,10 @@ from app.api import deps as api_deps
 from app.main import app
 from app.services.generation.rag_chain import Group, pack_context, validate_citations
 
-from .fakes import DOC_A, DOC_B, FakeLLM, FakeReranker, FakeStore, make_deps, make_hit
+from .fakes import DOC_A, DOC_B, FakeLLM, FakeReranker, FakeStore, auth, make_deps, make_hit
 
-USER = str(uuid.uuid4())
-H = {"X-User-Id": USER}
+USER = uuid.uuid4()
+H = auth(USER)
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def test_chat_returns_grounded_answer_with_page_citation(setup):
     body = r.json()
     assert "[c_1]" in body["answer"]
     assert body["citations"][0]["page_start"] == 7 and body["citations"][0]["bbox_list"]
-    assert str(st["store"].scopes[0].user_id) == USER  # tenant always in scope
+    assert st["store"].scopes[0].user_id == USER  # tenant always in scope
     req = st["llm"].requests[0]
     assert '<source id="c_1"' in req.user and "untrusted data" in req.system
     assert [m.role for m in st["session"].added if hasattr(m, "role")] == ["user", "assistant"]
@@ -75,9 +75,10 @@ def test_missing_reranker_degrades_but_still_answers(setup):
     assert body["citations"] and body["meta"]["degraded"] == ["rerank"]
 
 
-def test_chat_requires_user_header(setup):
+def test_chat_requires_a_bearer_token(setup):
     build, _ = setup
-    assert build(FakeStore()).post("/chat", json={"question": "hi"}).status_code == 422
+    r = build(FakeStore()).post("/chat", json={"question": "hi"})
+    assert r.status_code == 401 and r.headers["www-authenticate"] == "Bearer"
 
 
 def test_empty_question_and_bad_compare_are_422(setup):

@@ -8,12 +8,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import routes_auth, routes_chat, routes_documents, routes_study
 from app.config import get_settings
+from app.services.auth import assert_safe_config
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Load the embedding model before serving, so the first question is not a cold start."""
     settings = get_settings()
+    assert_safe_config(settings)
     if settings.warm_embedder:
         from app.services.embeddings import get_embedder
 

@@ -31,6 +31,18 @@ class PipelineConfig(BaseModel, frozen=True):
     prompt_version: str = "v2"
 
 
+# USD per million tokens (cached: 2026-10-06, Anthropic first-party API). Cache reads cost 0.1x
+# and cache writes 1.25x the input price. Update when prices change; unknown models cost 0.
+PRICES_PER_MTOK: dict[str, tuple[float, float]] = {
+    "claude-opus-5-5": (4.0, 20.0),
+    "claude-opus-5": (5.0, 25.0),
+    "claude-sonnet-5-5": (2.0, 10.0),
+    "claude-sonnet-5": (2.0, 10.0),
+    "claude-haiku-5-5": (0.10, 0.50),
+    "claude-fable-5-1": (10.0, 50.0),
+}
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_nested_delimiter="__")
 
@@ -52,6 +64,25 @@ class Settings(BaseSettings):
     warm_embedder: bool = True
     cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     pipeline: PipelineConfig = PipelineConfig()
+
+    # --- auth, limits, ops (Phase 5) ---
+    environment: str = "dev"  # anything else refuses to start with the default JWT secret
+    access_token_minutes: int = 15
+    refresh_token_days: int = 14
+    cookie_secure: bool = False  # set true behind HTTPS
+    registration_enabled: bool = True
+    admin_emails: list[str] = []
+    rate_limit_per_minute: int = 30  # model-calling endpoints, per user
+    login_attempts_per_15min: int = 10  # per client IP and email
+    daily_token_budget: int = 500_000  # per user; 0 disables
+    cache_enabled: bool = True
+    cache_ttl_seconds: int = 3600
+    semantic_cache_threshold: float = 0.95
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_host: str = ""
+    mask_pii_in_logs: bool = True
+    llm_max_concurrency: int = 8
 
 
 @lru_cache

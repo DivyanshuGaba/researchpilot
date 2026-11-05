@@ -20,6 +20,8 @@ from app.services.generation.llm_client import LLMRequest, LLMResponse
 from app.services.ingestion.pipeline import ingest_version
 from app.services.vectorstore import PgVectorStore, Scope
 
+from .fakes import auth
+
 
 def _db_ready() -> bool:
     try:
@@ -213,7 +215,7 @@ def test_upload_and_chat_end_to_end(tmp_path):
     app.dependency_overrides[deps.reranker_dep] = lambda: None
     try:
         client = TestClient(app)
-        h = {"X-User-Id": str(user)}
+        h = auth(user)
         up = client.post("/documents", headers=h, files={"file": ("bio.pdf", pdf.read_bytes())})
         assert up.status_code == 202, up.text
         listed = client.get("/documents", headers=h).json()
@@ -227,7 +229,7 @@ def test_upload_and_chat_end_to_end(tmp_path):
 
         # a different user has no documents and gets a refusal without calling the LLM
         llm.req = None
-        other = {"X-User-Id": str(_make_user())}
+        other = auth(_make_user())
         assert client.get("/documents", headers=other).json() == []
         r2 = client.post("/chat", headers=other, json={"question": "what do chloroplasts do?"})
         assert r2.json()["citations"] == [] and llm.req is None
@@ -293,7 +295,7 @@ def test_multi_turn_rewrite_and_rolling_summary(tmp_path):
     _make_pdf(pdf, PAGES)
     llm = FakeLLM("Mitochondria make ATP [c_1].", rewrite="how do mitochondria produce ATP")
     client = _chat_client(tmp_path, llm)
-    h = {"X-User-Id": str(user)}
+    h = auth(user)
     try:
         assert client.post("/documents", headers=h, files={"file": ("bio.pdf", pdf.read_bytes())}).status_code == 202
 
@@ -332,7 +334,7 @@ def test_compare_mode_against_real_database(tmp_path):
     _make_pdf(b, ["Paper B reports that mitochondria yield 36 ATP per glucose molecule."])
     llm = FakeLLM("A: 30 [c_1]. B: 36 [c_2].")
     client = _chat_client(tmp_path, llm)
-    h = {"X-User-Id": str(user)}
+    h = auth(user)
     try:
         for name, p in (("Paper A", a), ("Paper B", b)):
             client.post("/documents", headers=h, files={"file": (f"{name}.pdf", p.read_bytes())})
@@ -355,7 +357,7 @@ def test_compare_mode_against_real_database(tmp_path):
 def _study_setup(tmp_path, llm):
     client = _chat_client(tmp_path, llm)
     user = _make_user()
-    h = {"X-User-Id": str(user)}
+    h = auth(user)
     pdf = tmp_path / "bio.pdf"
     _make_pdf(pdf, PAGES)
     up = client.post("/documents", headers=h, files={"file": ("Biology.pdf", pdf.read_bytes())})
@@ -394,7 +396,7 @@ def test_quiz_flow_persists_isolates_tenants_and_handles_errors(tmp_path):
         assert got["id"] == quiz["id"]
         assert [x["id"] for x in client.get(f"/study/quizzes?document_id={doc_id}", headers=h).json()] == [quiz["id"]]
 
-        other = {"X-User-Id": str(_make_user())}
+        other = auth(_make_user())
         assert client.get(f"/study/quizzes/{quiz['id']}", headers=other).status_code == 404
         assert client.get("/study/quizzes", headers=other).json() == []
         assert client.post("/study/quizzes", headers=other, json={"document_id": doc_id}).status_code == 404
@@ -447,7 +449,7 @@ def test_study_requires_a_ready_document(tmp_path):
     llm.handler = lambda req: _quiz_reply()
     client, h, doc_id = _study_setup(tmp_path, llm)
     try:
-        user_id = uuid.UUID(h["X-User-Id"])
+        user_id = h.user_id
         with tenant_session(user_id) as s:
             doc = s.get(Document, uuid.UUID(doc_id))
             assert doc is not None
@@ -498,11 +500,11 @@ def test_summary_is_map_reduced_then_served_from_cache(tmp_path):
         assert len(llm.requests) == calls_after_first  # no model calls at all
 
         assert client.get(f"/study/summaries/{doc_id}", headers=h).json()["summary"] == first["summary"]
-        other = {"X-User-Id": str(_make_user())}
+        other = auth(_make_user())
         assert client.get(f"/study/summaries/{doc_id}", headers=other).status_code == 404
 
         # re-ingesting makes a new chunk set: a new version must not reuse a stale summary
-        user_id = uuid.UUID(h["X-User-Id"])
+        user_id = h.user_id
         with tenant_session(user_id) as s:
             old = s.scalar(select(DocumentVersion).where(DocumentVersion.document_id == uuid.UUID(doc_id)))
             assert old is not None
@@ -539,7 +541,7 @@ def test_agent_search_tool_against_real_database(tmp_path):
         assert "<source id=\"c_1\"" in tool_result and "Photosynthesis" in tool_result
         # another user's agent finds nothing in these documents
         llm.script = [tool_turn(("search_documents", {"query": "photosynthesis glucose"})), text_turn("none")]
-        other = {"X-User-Id": str(_make_user())}
+        other = auth(_make_user())
         client.post("/chat", headers=other, json={"question": "photosynthesis?", "mode": "agent"})
         assert "No relevant passages" in llm.converse_requests[-1].messages[-1]["content"][0]["content"]
     finally:

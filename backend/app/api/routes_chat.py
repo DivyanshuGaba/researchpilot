@@ -6,12 +6,13 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.api.deps import chat_deps, current_user_id
+from app.api.deps import chat_deps, current_user_id, enforce_rate_limit
 from app.services.chat_service import (
     ChatRequestError,
     Deps,
     answer_turn,
     persist_exchange,
+    record_usage,
     stream_chat,
     validate_request,
 )
@@ -56,7 +57,7 @@ def _validate(body: ChatIn) -> None:
         raise HTTPException(422, str(exc)) from exc
 
 
-@router.post("/chat")
+@router.post("/chat", dependencies=[Depends(enforce_rate_limit)])
 async def chat(
     body: ChatIn,
     user_id: uuid.UUID = Depends(current_user_id),
@@ -72,6 +73,7 @@ async def chat(
         result.answer, result.citations, result.input_tokens, result.output_tokens, False,
         out.tool_calls,
     )
+    await record_usage(deps, user_id)
     return ChatOut(
         conversation_id=conv_id,
         message_id=msg_id,
@@ -82,7 +84,7 @@ async def chat(
     )
 
 
-@router.post("/chat/stream")
+@router.post("/chat/stream", dependencies=[Depends(enforce_rate_limit)])
 async def chat_stream(
     body: ChatIn,
     user_id: uuid.UUID = Depends(current_user_id),

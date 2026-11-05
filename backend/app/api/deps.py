@@ -1,24 +1,45 @@
 import uuid
 from collections.abc import Callable, Iterator
 
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
 from app.db import tenant_session
+from app.services.auth import AuthError, decode_access_token
 from app.services.chat_service import Deps, SessionOpener, StoreFactory
 from app.services.embeddings import Embedder, get_embedder
-from app.services.generation.llm_client import AnthropicClient, LLMClient
+from app.services.generation.llm_client import AnthropicClient, LLMClient, MeteredLLM
+from app.services.limits import Limiter, get_limiter
 from app.services.retrieval.reranker import Reranker, get_reranker
 from app.services.vectorstore import PgVectorStore
 
 
-def current_user_id(x_user_id: str = Header(...)) -> uuid.UUID:
-    """Phase 1 dev auth: the caller states its user id. Replaced by JWT in Phase 5."""
+def settings_dep() -> Settings:
+    return get_settings()
+
+
+def limiter_dep() -> Limiter:
+    return get_limiter()
+
+
+_bearer = HTTPBearer(auto_error=False)
+
+
+def current_user_id(
+    creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    settings: Settings = Depends(settings_dep),
+) -> uuid.UUID:
+    """The signed-in user, from a short-lived JWT access token (Authorization: Bearer)."""
+    if creds is None:
+        raise HTTPException(401, "not signed in", headers={"WWW-Authenticate": "Bearer"})
     try:
-        return uuid.UUID(x_user_id)
-    except ValueError as exc:
-        raise HTTPException(401, "invalid X-User-Id") from exc
+        return decode_access_token(creds.credentials, settings)
+    except AuthError as exc:
+        raise HTTPException(
+            401, "invalid or expired token", headers={"WWW-Authenticate": "Bearer"}
+        ) from exc
 
 
 def db_session(user_id: uuid.UUID = Depends(current_user_id)) -> Iterator[Session]:
@@ -32,10 +53,6 @@ def session_opener_dep() -> SessionOpener:
 
 def store_factory_dep() -> StoreFactory:
     return PgVectorStore
-
-
-def settings_dep() -> Settings:
-    return get_settings()
 
 
 def embedder_dep(settings: Settings = Depends(settings_dep)) -> Embedder:
@@ -68,5 +85,22 @@ def chat_deps(
     reranker: Reranker | None = Depends(reranker_dep),
     llm: LLMClient = Depends(llm_dep),
     settings: Settings = Depends(settings_dep),
+    limiter: Limiter = Depends(limiter_dep),
 ) -> Deps:
-    return Deps(open_session, make_store, embedder, reranker, llm, settings)
+    # A fresh metered wrapper per request, so usage and cost are per request.
+    return Deps(open_session, make_store, embedder, reranker, MeteredLLM(llm), settings, limiter)
+
+
+async def enforce_rate_limit(
+    user_id: uuid.UUID = Depends(current_user_id),
+    settings: Settings = Depends(settings_dep),
+    limiter: Limiter = Depends(limiter_dep),
+) -> None:
+    """Per-user request rate for endpoints that call the model, plus the daily token budget."""
+    ok, retry = await limiter.hit(f"rl:{user_id}", settings.rate_limit_per_minute, 60)
+    if not ok:
+        raise HTTPException(
+            429, "too many requests, slow down", headers={"Retry-After": str(retry)}
+        )
+    if settings.daily_token_budget and await limiter.tokens_used(user_id) >= settings.daily_token_budget:
+        raise HTTPException(429, "daily token budget reached, try again tomorrow")

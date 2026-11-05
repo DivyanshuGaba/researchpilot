@@ -154,3 +154,55 @@ class Summary(Base):
     chunk_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = _now()
+
+
+class RefreshToken(Base):
+    """Rotating refresh tokens. Only the SHA-256 of the token is stored."""
+
+    __tablename__ = "refresh_tokens"
+    id: Mapped[uuid.UUID] = _pk()
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = _now()
+
+
+class OutboxEvent(Base):
+    """Written in the same transaction as the row it concerns; a dispatcher publishes it."""
+
+    __tablename__ = "outbox"
+    id: Mapped[uuid.UUID] = _pk()
+    kind: Mapped[str] = mapped_column(String(40))
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = _now()
+    dispatched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+
+class QueryLog(Base):
+    """One row per answered question: what was retrieved, how long each stage took, what it cost."""
+
+    __tablename__ = "query_logs"
+    id: Mapped[uuid.UUID] = _pk()
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    message_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    conversation_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    mode: Mapped[str] = mapped_column(String(10))
+    config_hash: Mapped[str] = mapped_column(String(16))
+    rewritten_query: Mapped[str] = mapped_column(Text, default="")  # PII-masked
+    retrieved_chunk_ids: Mapped[list[Any]] = mapped_column(JSONB, default=list)
+    top_score: Mapped[float | None] = mapped_column(Numeric(8, 5), nullable=True)
+    gated: Mapped[bool] = mapped_column(Boolean, default=False)
+    cache_status: Mapped[str] = mapped_column(String(12), default="miss")  # miss|exact|semantic
+    latency_ms: Mapped[int] = mapped_column(Integer, default=0)
+    latency_breakdown: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    tokens_in: Mapped[int] = mapped_column(Integer, default=0)
+    tokens_out: Mapped[int] = mapped_column(Integer, default=0)
+    cache_read_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    cost_usd: Mapped[float] = mapped_column(Numeric(10, 6), default=0)
+    degraded: Mapped[list[Any]] = mapped_column(JSONB, default=list)
+    error: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    created_at: Mapped[datetime] = _now()
+
+    __table_args__ = (Index("ix_query_logs_user_created", "user_id", "created_at"),)

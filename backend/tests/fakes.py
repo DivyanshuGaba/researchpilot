@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from types import SimpleNamespace
 
 from app.config import Settings
+from app.services.auth import create_access_token
 from app.services.chat_service import Deps
 from app.services.generation.llm_client import (
     ConverseRequest,
@@ -163,3 +164,17 @@ async def _converse(self, req: ConverseRequest) -> ToolTurn:
 
 
 FakeLLM.converse = _converse  # type: ignore[attr-defined]
+
+
+class AuthHeaders(dict):
+    """Authorization headers for a user, remembering which user they belong to."""
+
+    user_id: uuid.UUID
+
+
+def auth(user_id) -> AuthHeaders:
+    uid = user_id if isinstance(user_id, uuid.UUID) else uuid.UUID(str(user_id))
+    token, _ = create_access_token(uid, Settings())
+    headers = AuthHeaders(Authorization=f"Bearer {token}")
+    headers.user_id = uid
+    return headers

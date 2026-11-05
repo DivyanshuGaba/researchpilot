@@ -13,7 +13,7 @@ from app.services.generation.agent import AgentLimits
 from app.services.generation.rag_chain import StreamEvent
 from app.services.generation.tools import ToolBox
 
-from .fakes import DOC_A, FakeLLM, FakeStore, make_deps, make_hit, text_turn, tool_turn
+from .fakes import DOC_A, FakeLLM, FakeStore, auth, make_deps, make_hit, text_turn, tool_turn
 
 USER = uuid.uuid4()
 SEARCH = ("search_documents", {"query": "ATP yield"})
@@ -146,7 +146,7 @@ async def test_toolbox_is_the_only_capability_surface():
 
 # --- HTTP and SSE integration ---------------------------------------------------------------
 
-H = {"X-User-Id": str(USER)}
+H = auth(USER)
 
 
 def test_chat_agent_mode_returns_tool_calls_and_citations():

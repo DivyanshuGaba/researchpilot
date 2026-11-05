@@ -8,10 +8,18 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import EnqueueFn, current_user_id, db_session, enqueue_dep, settings_dep
+from app.api.deps import (
+    EnqueueFn,
+    current_user_id,
+    db_session,
+    enqueue_dep,
+    limiter_dep,
+    settings_dep,
+)
 from app.config import Settings
 from app.models import Document, DocumentVersion
 from app.services.ingestion.parsers import sniff_type
+from app.services.limits import Limiter
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -68,7 +76,11 @@ async def upload(
     session: Session = Depends(db_session),
     settings: Settings = Depends(settings_dep),
     enqueue: EnqueueFn = Depends(enqueue_dep),
+    limiter: Limiter = Depends(limiter_dep),
 ) -> DocumentOut:
+    ok, retry = await limiter.hit(f"upload:{user_id}", 30, 3600)
+    if not ok:
+        raise HTTPException(429, "too many uploads, try again later", headers={"Retry-After": str(retry)})
     data = await file.read(settings.max_upload_mb * 1024 * 1024 + 1)
     if len(data) > settings.max_upload_mb * 1024 * 1024:
         raise HTTPException(413, f"file exceeds {settings.max_upload_mb} MB")

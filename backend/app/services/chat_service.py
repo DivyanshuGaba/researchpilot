@@ -24,7 +24,7 @@ from app.models import Conversation, Document, Message
 from app.services import memory
 from app.services.embeddings import Embedder
 from app.services.generation.agent import AgentLimits, AgentResult, run_agent
-from app.services.generation.llm_client import LLMClient
+from app.services.generation.llm_client import LLMClient, Usage
 from app.services.generation.rag_chain import (
     Citation,
     RagAnswer,
@@ -35,6 +35,7 @@ from app.services.generation.rag_chain import (
     stream_answer,
 )
 from app.services.generation.tools import ToolBox
+from app.services.limits import Limiter
 from app.services.retrieval.query_rewrite import rewrite_query
 from app.services.retrieval.reranker import Reranker
 from app.services.retrieval.service import Retrieval, finalize, gather_candidates
@@ -61,6 +62,7 @@ class Deps:
     reranker: Reranker | None
     llm: LLMClient
     settings: Settings
+    limiter: Limiter | None = None
 
 
 def validate_request(question: str, mode: str, document_ids: tuple[uuid.UUID, ...] | None) -> None:
@@ -68,6 +70,16 @@ def validate_request(question: str, mode: str, document_ids: tuple[uuid.UUID, ..
         raise ChatRequestError("question is empty")
     if mode == "compare" and (document_ids is None or len(set(document_ids)) < 2):
         raise ChatRequestError("compare mode needs at least two selected documents")
+
+
+def usage_of(deps: Deps) -> Usage:
+    """Totals for this request when the LLM is metered (it is in the API; fakes are not)."""
+    return getattr(deps.llm, "usage", None) or Usage()
+
+
+async def record_usage(deps: Deps, user_id: uuid.UUID) -> None:
+    if deps.limiter is not None:
+        await deps.limiter.add_tokens(user_id, usage_of(deps).total_tokens)
 
 
 def sse(event: str, data: dict[str, Any]) -> str:
@@ -419,6 +431,7 @@ async def _produce(
             final.answer, final.citations, final.input_tokens, final.output_tokens, False,
             tool_calls,
         )
+        await record_usage(deps, user_id)
         await queue.put(
             sse(
                 "done",
@@ -435,6 +448,7 @@ async def _produce(
             )
         )
     except asyncio.CancelledError:
+        await asyncio.shield(record_usage(deps, user_id))  # the tokens were spent either way
         await asyncio.shield(
             run_in_threadpool(
                 persist_exchange, deps.open_session, user_id, conversation_id, question,
