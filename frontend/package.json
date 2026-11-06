@@ -28,5 +28,10 @@
   },
   "engines": {
     "node": ">=22.12"
+  },
+  "overrides": {
+    "@tailwindcss/node": {
+      "magic-string": "0.30.21"
+    }
   }
 }
