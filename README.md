@@ -4,7 +4,25 @@ Upload PDFs, DOCX files or URLs and chat with them. Answers are grounded in your
 
 ## Status
 
-Phases 1 to 5 are implemented: ingestion, streaming chat with page-level citations and PDF highlights, hybrid retrieval with reranking and a confidence gate, query rewriting with conversation memory, multi-document comparison, a semantic chunker, a bounded tool-using agent, and quiz, flashcard and summary generation. Phase 5 added real auth, rate limits and quotas, guardrails, observability, caching and the evaluation harness; CI, production images and deployment notes are Phase 6.
+Phases 1 to 5 are implemented: ingestion, streaming chat with page-level citations and PDF highlights, hybrid retrieval with reranking and a confidence gate, query rewriting with conversation memory, multi-document comparison, a semantic chunker, a bounded tool-using agent, and quiz, flashcard and summary generation. Phase 5 added real auth, rate limits and quotas, guardrails, observability, caching and the evaluation harness. Phase 6 added multi-stage Docker images with healthchecks, a `prod` compose profile with a Caddy proxy, a GitHub Actions workflow (not yet run on GitHub) and [deployment notes](docs/deployment.md).
+
+## Architecture
+
+```mermaid
+flowchart LR
+  U[Browser] --> FE[Next.js frontend]
+  FE -->|REST and SSE| API[FastAPI API]
+  API --> PG[(Postgres + pgvector)]
+  API --> RD[(Redis: cache, rate limits, queue)]
+  API -->|enqueue| W[Celery worker]
+  W -->|parse, chunk, embed| PG
+  API --> RR[Cross-encoder reranker]
+  API --> LLM[Anthropic API]
+  P[Caddy proxy, prod profile] --> FE
+  P -->|/api/*| API
+```
+
+Ingestion: upload, parse with page numbers, chunk (parents and searchable children), embed, store. Query: rewrite, hybrid retrieve, rerank, confidence gate, generate, validate citations. Details in [docs/architecture.md](docs/architecture.md).
 
 ## Quick start
 
@@ -14,7 +32,7 @@ docker compose build
 docker compose up -d
 ```
 
-Open the frontend (below), create an account and upload a PDF. Or from the command line:
+Requires Node 22.12 or newer for local frontend work. Open the frontend (below), create an account and upload a PDF. Or from the command line:
 
 ```bash
 curl -s -X POST localhost:8000/auth/register -H 'content-type: application/json' \
@@ -60,6 +78,13 @@ python -m eval.adversarial injection                          # prompt injection
 python -m eval.run_eval --smoke                               # 10 questions, recorded replies, free; fails below eval/baseline.json
 ```
 
+| config | correctness | faithfulness | false refusal | answer $/query | generation p50 (ms) |
+|---|---|---|---|---|---|
+| recursive 800, vector | 0.902 | 1.000 | 0.073 | $0.0141 | 2398 |
+| recursive 800, hybrid + rerank | 0.951 | 0.998 | 0.024 | $0.0123 | 2402 |
+| recursive 1200, hybrid + rerank | 0.951 | 0.998 | 0.024 | $0.0158 | n/a |
+| semantic 800, hybrid + rerank | 0.927 | 0.998 | 0.024 | $0.0131 | 2457 |
+
 Headline results (41 answerable questions, so one question is 0.024 and small gaps are noise): **reranking is the consistent winner**. Hybrid + rerank reached correctness 0.95 and 2% false refusals, against 0.90 / 7% for vector search and 0.87 / 7% for hybrid without reranking; retrieval hit@5 was 0.83 (vector) vs 0.88 (hybrid + rerank, 800-token sections) and 0.93 (1200). Faithfulness was about 1.0 and refusal accuracy 1.0 throughout. An answer costs about $0.012. 5 of 6 prompt-injection attacks were fully resisted by a real model, and the sixth made it refuse rather than leak. The semantic cache threshold is 0.97 because 0.95 gave a wrong-answer hit.
 
 ## Agent and study tools
@@ -104,8 +129,8 @@ pytest && ruff check . && mypy app
 | pymupdf | PDF text with page numbers and bounding boxes |
 | python-docx, trafilatura | DOCX and web page extraction |
 
-## Known limitations (Phase 1)
+## Known limitations
 
-- The confidence threshold and semantic-cache threshold come from small samples; no email verification or password reset; CI workflow not written yet (Phase 6); no intent routing (compare and agent are manual toggles); no rate limits or quotas, so the agent and study endpoints call the model on every request; `fetch_url` does not pin the connection to the validated IP (DNS rebinding gap); answers render as plain text (markdown headings show as `##`); the production Docker image for the frontend is not built yet (Phase 6); highlights are accurate for unrotated PDF pages only; scanned PDFs are rejected; DOCX and URLs report page 1.
+- The confidence threshold and semantic-cache threshold come from small samples; no email verification or password reset; the CI workflow passes `actionlint` but has not run on GitHub; no intent routing (compare and agent are manual toggles); `fetch_url` does not pin the connection to the validated IP (DNS rebinding gap); answers render as plain text (markdown headings show as `##`); inline ingestion mode keeps uploads on one local disk, so it suits a single instance only; no screenshots yet; highlights are accurate for unrotated PDF pages only; scanned PDFs are rejected; DOCX and URLs report page 1.
 
 Integration tests use the compose Postgres on host port 5433 (5432 is often taken by a local Postgres): `docker compose up -d postgres`, then `alembic upgrade head` with `MIGRATION_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5433/researchpilot`.
